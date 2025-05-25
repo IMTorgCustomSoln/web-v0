@@ -1,17 +1,22 @@
-import './assets/main.css'
+//import './assets/main.css'
 
 import { createApp } from 'vue'
 import {createBootstrap} from 'bootstrap-vue-next'
-import { createPinia } from 'pinia'
+import {pinia} from '@/stores/config_stores'
 
-// Add the necessary CSS
+//css
 import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-vue-next/dist/bootstrap-vue-next.css'
+
+//pdf
+import * as pdfjsLib from "pdfjs-dist/build/pdf"
+//import *  as pdfjsViewer from "pdfjs-dist/web/pdf_viewer"
+import * as pdfjsWorker from "pdfjs-dist/build/pdf.worker.mjs"
 
 import App from './App.vue'
 
 const app = createApp(App)
 app.use(createBootstrap())
-app.use(createPinia())
+app.use(pinia)
 
 app.mount('#app')

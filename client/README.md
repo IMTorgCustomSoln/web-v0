@@ -34,6 +34,8 @@ simplehttpserver ./dist/
 
 # TODO
 
+* ~~create DocumentRecord in store~~
+* display pdf in viewer
 * save embeddings with associated document section text to rxdb
 * create query input
 * embed query input and search against rxdb

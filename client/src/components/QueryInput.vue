@@ -18,7 +18,7 @@ import { getVectorFromTextWithWorker } from '@/components/utils/worker-scheduler
 import { sortArrayByKey, euclideanDistance } from './utils/vector';
 
 import { mapStores } from 'pinia'
-import { useAppStore } from '@/stores/counter'
+import { useAppStore } from '@/stores/app'
 
 export default {
     name: 'QueryInput',
