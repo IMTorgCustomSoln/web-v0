@@ -1,12 +1,10 @@
 <script>
 import ImportData from '@/components/ImportData.vue'
-import QueryInput from '@/components/QueryInput.vue'
 
 export default {
     name: 'App',
     components: {
         ImportData,
-        QueryInput
     },
     data() {
         return {}
@@ -18,12 +16,11 @@ export default {
 <template>
   <header>
     <div class="wrapper">
-      <ImportData/>
     </div>
   </header>
   <main>
     <div class="wrapper">
-    <QueryInput/>
+      <ImportData/>
     </div>
   </main>
 </template>

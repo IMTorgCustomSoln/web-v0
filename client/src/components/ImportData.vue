@@ -10,10 +10,19 @@
                 {{ fileContent }}
             </BCardText>
         </BCard>
+        <BFormGroup>
+            <QueryInput/>
+        </BFormGroup>
+        <BCard>
+            <PdfDisplay ref="childRef"/>
+        </BCard>
     </BForm>
 </template>
 
 <script>
+import PdfDisplay from '@/components/PdfDisplay.vue'
+import QueryInput from '@/components/QueryInput.vue'
+
 import { getVectorFromTextWithWorker } from '@/components/utils/worker-scheduler.js';
 import { getFileRecord } from '@/components/utils/pdf_extract.js'
 import { getFileReferenceNumber } from './utils/utils';
@@ -25,6 +34,10 @@ import { useUserContent } from '@/stores/UserContent'
 
 export default {
     name: 'ImportData',
+    components:{
+        PdfDisplay,
+        QueryInput
+    },
     data() {
         return {
             //fileContent: null
@@ -62,9 +75,10 @@ export default {
         uploadPdfFile(event) {
             const file = event.target.files[0];
             this.filenames.push(file)
-            console.log(file)
+            console.log(file.name)
         },
         uploadInput() {
+            console.log('upload')
             // Load files into records
             if (this.filenames.length > 0) {
                 this.uploadFiles.bind(this)(this.filenames).then(
@@ -84,9 +98,11 @@ export default {
             //this.btnText = 'Add More Files'
 
             //TODO:note
-            this.userContentStore.addRecordsFromImport()            //TODO:should this be placed elsewhere?
+            console.log('process')
+            //this.userContentStore.addRecordsFromImport()            //TODO:should this be placed elsewhere?
             //this.appDisplayStore.viewSelection()
-
+            const childComponent = this.$refs.childRef
+			if (childComponent) {childComponent.updateDisplay();}
         },
         async uploadFiles(files) {
             // process files selected for upload and return an array of records
