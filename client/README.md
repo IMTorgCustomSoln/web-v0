@@ -34,7 +34,16 @@ simplehttpserver ./dist/
 
 # TODO
 
+_Phase I_
+
 * ~~create DocumentRecord in store~~
+* create 3 categories of search prompts: coverage + amounts, exclusions, conditions
+* enable user to select text
+* use text to modify / refine prompt
+* example input
+
+_Phase II_
+
 * display pdf in viewer
 * save embeddings with associated document section text to rxdb
 * create query input
