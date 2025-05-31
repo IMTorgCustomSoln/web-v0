@@ -3,9 +3,10 @@ import { ref } from 'vue'
 
 import { getDateFromJsNumber, getFormattedFileSize, getFileReferenceNumber } from '@/components/utils/utils.js'
 import * as utils from '@/components/utils/utils.js'
-import { DatabaseName, DbVersion, StoreNameDocumentRecord, StoreNamesAndKeyFields } from './constants.js'
+import { DatabaseName, DbVersion, StoreNameDocumentRecord, StoreNameDocumentVector, StoreNamesAndKeyFields } from './constants.js'
 import { updateItemsInStore, getItemFromStore } from './idb_mgmt.js'
 
+import { getVectorFromText, euclideanDistance } from '@/components/utils/vector.js'
 
 
 // Managed Notes
@@ -153,12 +154,14 @@ export class DocumentRecord {
     this.summary = this.clean_body.slice(0, 500)   //TODO:apply model to summarize text
     this.pp_toc = this.toc.map(section => `${section.title} (pg.${section.pageNumber})`)
 
-    if (utils.isEmpty(this.body_chars)){
+    if (utils.isEmpty(this.body_chars)) {
       this.body_chars = {}
-      Object.entries(this.body_pages).forEach(([pg,text]) => { 
-        this.body_chars[pg] = text.length 
+      Object.entries(this.body_pages).forEach(([pg, text]) => {
+        this.body_chars[pg] = text.length
       })
     }
+    // prepare embeddings
+    await this.setVectors()
     // prepare page numbers for search snippets
     //item.accumPageLines = item.length_lines_array.map((sum => value => sum += value)(0))    //.map((sum = 0, n => sum += n))  -> assignment to undeclared variable
     if (this.body_chars != null) {
@@ -191,70 +194,105 @@ export class DocumentRecord {
     const dataArray = await getItemFromStore(DatabaseName, DbVersion, StoreNameDocumentRecord, this.dataArrayKey)
     return dataArray
   }
+  async createVetors(){
+    const vectorRecords = []
+    for (let [page, pageText] of Object.entries(this.body_pages) ) {
+      const sentences = pageText.split('.')
+      for (let [index, textLine] of sentences.entries()) {
+        if (textLine.length < 100 | textLine.length > 1000) {
+          continue
+        }
+        const docEmbedding = await getVectorFromText(textLine)
+        const vectorItem = {
+          'page': page,
+          'index': index,
+          'text': textLine,
+          'embedding': docEmbedding
+        }
+        console.log(vectorItem)
+        vectorRecords.push(vectorItem)
+      }
+    }
+    return vectorRecords
+  }
+  async setVectors(vectorRecords=null) {
+    if(!vectorRecords){
+      vectorRecords = await this.createVetors()
+    }
+    const vectorRecord = [{ dataVectorKey: this.dataArrayKey, vectorRecords: vectorRecords }]
+    const check = await updateItemsInStore(DatabaseName, DbVersion, StoreNameDocumentVector, vectorRecord)
+    this.dataVectorKey = this.dataArrayKey
+    return check
+  }
+  async getVector(){
+    console.log(this.dataArrayKey)
+    const dataVector = await getItemFromStore(DatabaseName, DbVersion, StoreNameDocumentVector, this.dataArrayKey)
+    return dataVector
+  }
   async prepareForSave() {
-    this.dataArray = await this.getDataArray()
-    return true
-  }
+      this.dataArray = await this.getDataArray()
+      return true
+    }
   async prepareForIndexDb() {
-    this.dataArray = null
-    return true
-  }
+      this.dataArray = null
+      return true
+    }
   async setAttrWithObj(obj) {
 
-    //inline
-    //file indexing
-    this.id = obj.id
-    this.reference_number = obj.reference_number
-    this.filepath = obj.filepath
-    this.filename_original = obj.filename_original
-    this.filename_modified = obj.filename_modified
+      //inline
+      //file indexing
+      this.id = obj.id
+      this.reference_number = obj.reference_number
+      this.filepath = obj.filepath
+      this.filename_original = obj.filename_original
+      this.filename_modified = obj.filename_modified
 
-    //raw
-    this.file_extension = obj.file_extension
-    this.filetype = obj.filetype
-    this.page_nos = obj.page_nos
-    this.dataArrayKey = obj.dataArrayKey          //Uint8Array
-    this.dataArray = obj.dataArray
-    this.length_lines = obj.length_lines    //sentences
-    this.file_size_mb = obj.file_size_mb
-    this.date = obj.date
+      //raw
+      this.file_extension = obj.file_extension
+      this.filetype = obj.filetype
+      this.page_nos = obj.page_nos
+      this.dataArrayKey = obj.dataArrayKey          //Uint8Array
+      this.dataArray = obj.dataArray
+      this.length_lines = obj.length_lines    //sentences
+      this.file_size_mb = obj.file_size_mb
+      this.date = obj.date
 
-    //inferred / searchable
-    this.title = obj.title
-    this.author = obj.author
-    this.subject = obj.subject
-    this.toc = obj.toc
-    this.pp_toc = obj.pp_toc
+      //inferred / searchable
+      this.title = obj.title
+      this.author = obj.author
+      this.subject = obj.subject
+      this.toc = obj.toc
+      this.pp_toc = obj.pp_toc
 
-    this.body_chars = obj.body_chars
-    this.body_pages = obj.body_pages
-    this.length_lines_array = obj.length_lines_array
-    this.length_lines = obj.length_lines
-    this.body = obj.body
-    this.clean_body = obj.clean_body
-    this.readability_score = obj.readability_score
-    this.tag_categories = obj.tag_categories
-    this.keywords = obj.keywords
-    this.summary = obj.summary
-    this.models = obj.models
+      this.body_chars = obj.body_chars
+      this.body_pages = obj.body_pages
+      this.length_lines_array = obj.length_lines_array
+      this.length_lines = obj.length_lines
+      this.body = obj.body
+      this.clean_body = obj.clean_body
+      this.readability_score = obj.readability_score
+      this.tag_categories = obj.tag_categories
+      this.keywords = obj.keywords
+      this.summary = obj.summary
+      this.models = obj.models
 
-    //added by frontend
-    this.html_body = obj.html_body
-    this.date_created = obj.date_created
-    this.date_mod = obj.date_mod
-    this.canvas_array = obj.canvas_array
+      //added by frontend
+      this.html_body = obj.html_body
+      this.date_created = obj.date_created
+      this.date_mod = obj.date_mod
+      this.canvas_array = obj.canvas_array
 
-    this.sort_key = obj.sort_key
-    this.hit_count = obj.hit_count
-    this.snippets = obj.snippets
-    this.selected_snippet_page = obj.selected_snippet_page
-    this._showDetails = obj._showDetails
-    this._activeDetailsTab = obj._activeDetailsTab
-    this.accumPageLines = obj.accumPageLines
+      this.sort_key = obj.sort_key
+      this.hit_count = obj.hit_count
+      this.snippets = obj.snippets
+      this.selected_snippet_page = obj.selected_snippet_page
+      this._showDetails = obj._showDetails
+      this._activeDetailsTab = obj._activeDetailsTab
+      this.accumPageLines = obj.accumPageLines
+    }
+
+
   }
-
-
-}
 
 /*
 export const DocumentIndexData = ref({

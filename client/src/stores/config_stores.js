@@ -9,8 +9,8 @@ import { DatabaseName, DbVersion, StoreNamesAndKeyFields } from './constants'
 const idbConfig = new IdbConfig(DatabaseName, DbVersion, StoreNamesAndKeyFields)
 const supported = await idbConfig.checkIdbSupport()
 if (supported) {
-  await idbConfig.createAllStoresInDb()
-  const testResults = await idbConfig.testConfig()
+  const checks = await idbConfig.createAllStoresInDb()
+  const testResults = await idbConfig.testConfig(checks)
   console.log(testResults)
 }
 

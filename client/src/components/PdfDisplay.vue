@@ -28,7 +28,7 @@ export default {
 async function runDisplay(record, pageSelection) {
     if (record) {
         var dataObj = await record.getDataArray()
-        var pdfData = dataObj['dataArray']
+        var pdfData = dataObj.record.dataArray
     } else {
         // atob() is used to convert base64 encoded PDF to binary-like data.
         // (See also https://developer.mozilla.org/en-US/docs/Web/API/WindowBase64/
@@ -53,10 +53,11 @@ async function runDisplay(record, pageSelection) {
     }
     //
     // The workerSrc property shall be specified.
-    //
+    // Fixed using ref: https://github.com/mozilla/pdf.js/discussions/17622
+    /*
     pdfjsLib.GlobalWorkerOptions.workerSrc =
         '../../node_modules/pdfjs-dist/build/pdf.worker.mjs';
-
+    */
     // Opening PDF by passing its binary data as a string. It is still preferable
     // to use Uint8Array, but string or array-like structure will work too.
     var loadingTask = pdfjsLib.getDocument({ data: pdfData, });

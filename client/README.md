@@ -44,7 +44,7 @@ _Phase I_
 
 _Phase II_
 
-* display pdf in viewer
+* ~~display pdf in viewer~~
 * save embeddings with associated document section text to rxdb
 * create query input
 * embed query input and search against rxdb
