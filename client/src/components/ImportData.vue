@@ -1,4 +1,5 @@
 <template>
+    <h1>Upload</h1>
     <BForm name="uploadForm">
         <BFormGroup label="Upload file" description="">
             <BFormInput id="uploadInput" type="file" accept=".pdf" @change="uploadPdfFile" single />
@@ -11,10 +12,10 @@
             </BCardText>
         </BCard>
         <BFormGroup>
-            <QueryInput/>
+            <QueryInput ref="refQueryInput"/>
         </BFormGroup>
         <BCard>
-            <PdfDisplay ref="childRef"/>
+            <PdfDisplay ref="refPdfDisplay"/>
         </BCard>
     </BForm>
 </template>
@@ -101,8 +102,10 @@ export default {
             console.log('process')
             //this.userContentStore.addRecordsFromImport()            //TODO:should this be placed elsewhere?
             //this.appDisplayStore.viewSelection()
-            const childComponent = this.$refs.childRef
-			if (childComponent) {childComponent.updateDisplay();}
+            const pdfComponent = this.$refs.refPdfDisplay
+            const queryComponent = this.$refs.refQueryInput
+			if (pdfComponent) {pdfComponent.updateDisplay();}
+            if (queryComponent) {queryComponent.runPreConfigQuery();}
         },
         async uploadFiles(files) {
             // process files selected for upload and return an array of records
