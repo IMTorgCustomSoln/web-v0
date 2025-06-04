@@ -3,36 +3,58 @@
     <BAccordion flush>
         <BAccordionItem title="Query data" >
             <BForm name="uploadForm" @submit.prevent>
-                <BFormGroup label="Query your data:" description="">
-                    <BFormInput id="queryInput" placeholder="Where is risk in contract?" v-model="queryInput" @keyup.enter.prevent="submitQuery"/>
-                    <BButton variant="primary" @click="submitQuery">Submit</BButton>
-                    <BButton variant="primary" @click="clearQuery">Clear</BButton>
+                <BFormGroup label="Document search:" description="">
+                    <BFormInput id="queryInput" placeholder="Where is risk in contract?" v-model="prompts.user" @keyup.enter.prevent="runPreConfigQuery"/>
+                    <BButton variant="primary" @click="runPreConfigQuery('user')">Submit</BButton>
+                    <BButton variant="primary" @click="clearQuery('user')">Clear</BButton>
+                    <!--<BButton variant="primary" @click="minimizeResultsDisplay('user')">Minimize</BButton>-->
+                    <BButton v-b-toggle.user-results variant="primary" >Collapse</BButton>
                 </BFormGroup>
+                <BCollapse id="user-results" visible>
                 <BCard>
-                    <ul v-for="item in displayResults">
+                    <ul v-for="item in results.user">
                         <li> <strong>{{ item.index }} )</strong> [{{ item.dist }}] {{ item.text }} </li>
                     </ul>
                 </BCard>
+                </BCollapse>
             </BForm>
         </BAccordionItem>
         <BAccordionItem title="Pre-configured queries" >
             <BCard>
                 <BCardText title="Coverage / amounts" style="max-width: 20rem">
-                    {{ results.coverage }}
+                    <BButton variant="primary" @click="runPreConfigQuery('coverage')">Update</BButton>
+                    <BButton v-b-toggle.coverage-results variant="primary" >Collapse</BButton>
+                    <BCollapse id="coverage-results" visible>
+                    <ul v-for="item in results.coverage">
+                        <li> <strong>{{ item.index }} )</strong> [{{ item.dist }}] {{ item.text }} </li>
+                    </ul>
+                    </BCollapse>
                 </BCardText>
             </BCard>
             <BCard>
                 <BCardText title="Exclusions" style="max-width: 20rem">
-                    {{ results.exclusions }}
+                    <BButton variant="primary" @click="runPreConfigQuery('exclusions')">Update</BButton>
+                    <BButton v-b-toggle.exclusions-results variant="primary" >Collapse</BButton>
+                    <BCollapse id="exclusions-results" visible>
+                    <ul v-for="item in results.exclusions">
+                        <li> <strong>{{ item.index }} )</strong> [{{ item.dist }}] {{ item.text }} </li>
+                    </ul>
+                    </BCollapse>
                 </BCardText>
             </BCard>
             <BCard>
                 <BCardText title="Conditions" style="max-width: 20rem">
-                    {{ results.conditions }}
+                    <BButton variant="primary" @click="runPreConfigQuery('conditions')">Update</BButton>
+                    <BButton v-b-toggle.conditions-results variant="primary" >Collapse</BButton>
+                    <BCollapse id="conditions-results" visible>
+                    <ul v-for="item in results.conditions">
+                        <li> <strong>{{ item.index }} )</strong> [{{ item.dist }}] {{ item.text }} </li>
+                    </ul>
+                    </BCollapse>
                 </BCardText>
+
             </BCard>
         </BAccordionItem>
-
     </BAccordion>
 </template>
 
@@ -42,6 +64,7 @@
     - https://blog.vue-pdf-viewer.dev/what-are-pdfjs-layers-and-how-you-can-use-them-in-vuejs?source=more_articles_bottom_blogs
     - 
 */
+import { toRaw } from 'vue';
 import { getVectorFromTextWithWorker } from '@/components/utils/worker-scheduler';
 import { sortArrayByKey, euclideanDistance } from './utils/vector';
 
@@ -54,18 +77,40 @@ export default {
         return {
             queryInput: null,
             displayResults: [],
+            display:{
+                user: true,
+                coverage: true,
+                exclusions: true,
+                conditions: true,
+            },
+            prompts:{
+                user: [],
+                coverage:[
+                    'What is the coverage?', 
+                    'What is the amount?'
+                ],
+                exclusions:[
+                    'What exclusions are there?'
+                ],
+                conditions:[
+                    'What conditions are there?'
+                ]
+            },
             results: {
-                coverage: null,
-                exclusions: null,
-                conditions: null
+                user: [],
+                coverage: [],
+                exclusions: [],
+                conditions: []
             }
-
         }
     },
     computed: {
         ...mapStores(useUserContent),
     },
     methods: {
+        getQueryDataStructures(queryType, attr){
+            return this[attr][queryType]
+        },
         async query(){
             console.log(this.queryInput)
             const searchEmbedding = await getVectorFromTextWithWorker(this.queryInput)
@@ -84,22 +129,42 @@ export default {
             }
             return distances
         },
-        async runPreConfigQuery(){
-            const distances = console.log('hi')
-            await this.query()
-            const coveragePrompt = 'What is the coverage and amounts?'
-            this.submitQuery(coveragePrompt)
-        },
-        async submitQuery() {
-            const distances = await this.query()
-            console.log(distances.length)
+        prepareAndDisplayResults(distances, queryType){
             let sortedDistances = sortArrayByKey(distances, 'dist', true)
-            this.displayResults.splice(0, this.displayResults.length, ...sortedDistances.slice(0, 10));
+            const dataStruct = this.getQueryDataStructures(queryType, 'results')
+            dataStruct.splice(0, dataStruct.length, ...sortedDistances.slice(0, 10));    
         },
-        clearQuery(){
-            this.displayResults.length = 0
+        async runPreConfigQuery(promptCategory){
+            this.queryInput = null
+            const dataStruct = this.getQueryDataStructures(promptCategory, 'prompts')
+            let tmp = null
+            if(typeof(dataStruct)=='string'){
+                tmp = [toRaw(dataStruct)]
+            } else {
+                tmp = toRaw(dataStruct)
+            }
+            this.queryInput = tmp.reduce((acc, item) => acc + ' ' + item)
+            const distances = await this.query()
+            this.queryInput = null
+            this.prepareAndDisplayResults(distances, promptCategory)
+        },
+        clearQuery(queryType){
+            const dataStruct = this.getQueryDataStructures(queryType, 'results')
+            dataStruct.length = 0
+        },
+        minimizeResultsDisplay(queryType){
+            let dataStruct = this.getQueryDataStructures(queryType, 'display')
+            dataStruct = !dataStruct
         }
     }
 }
 
 </script>
+
+<style scoped>
+
+.card-text{
+    max-width: 100rem;  /*TODO:fix this*/
+}
+
+</style>
