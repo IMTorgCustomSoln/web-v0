@@ -1,6 +1,6 @@
 <template>
     <h1>Upload</h1>
-    <BForm name="uploadForm">
+    <BForm name="uploadForm" @submit.prevent>
         <BFormGroup label="Upload file" description="">
             <BFormInput id="uploadInput" type="file" accept=".pdf" @change="uploadPdfFile" single />
             <BButton variant="primary" @click="uploadInput">Upload</BButton>
@@ -104,7 +104,7 @@ export default {
             //this.appDisplayStore.viewSelection()
             const pdfComponent = this.$refs.refPdfDisplay
             const queryComponent = this.$refs.refQueryInput
-			if (pdfComponent) {pdfComponent.updateDisplay();}
+			if (pdfComponent) {pdfComponent.processLoadingTask();}
             if (queryComponent) {queryComponent.runPreConfigQuery();}
         },
         async uploadFiles(files) {

@@ -2,9 +2,9 @@
     <h1>Results</h1>
     <BAccordion flush>
         <BAccordionItem title="Query data" >
-            <BForm name="uploadForm">
+            <BForm name="uploadForm" @submit.prevent>
                 <BFormGroup label="Query your data:" description="">
-                    <BFormInput id="queryInput" placeholder="Where is risk in contract?" v-model="queryInput" />
+                    <BFormInput id="queryInput" placeholder="Where is risk in contract?" v-model="queryInput" @keyup.enter.prevent="submitQuery"/>
                     <BButton variant="primary" @click="submitQuery">Submit</BButton>
                 </BFormGroup>
                 <BCard>
@@ -37,6 +37,10 @@
 
 
 <script>
+/* References
+    - https://blog.vue-pdf-viewer.dev/what-are-pdfjs-layers-and-how-you-can-use-them-in-vuejs?source=more_articles_bottom_blogs
+    - 
+*/
 import { getVectorFromTextWithWorker } from '@/components/utils/worker-scheduler';
 import { sortArrayByKey, euclideanDistance } from './utils/vector';
 
@@ -77,15 +81,16 @@ export default {
                     }
                 }
             }
+            return distances
         },
         async runPreConfigQuery(){
-            console.log('hi')
+            const distances = console.log('hi')
             await this.query()
             const coveragePrompt = 'What is the coverage and amounts?'
             this.submitQuery(coveragePrompt)
         },
         async submitQuery() {
-            await this.query()
+            const distances = await this.query()
             console.log(distances.length)
             let sortedDistances = sortArrayByKey(distances, 'dist', true)
             this.displayResults.splice(0, this.displayResults.length, ...sortedDistances.slice(0, 10));

@@ -10,7 +10,7 @@ import 'bootstrap-vue-next/dist/bootstrap-vue-next.css'
 
 //pdf
 import * as pdfjsLib from "pdfjs-dist/build/pdf"
-//import *  as pdfjsViewer from "pdfjs-dist/web/pdf_viewer"
+import *  as pdfjsViewer from "pdfjs-dist/web/pdf_viewer"
 import * as pdfjsWorker from "pdfjs-dist/build/pdf.worker.js"
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker
 
