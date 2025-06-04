@@ -2,22 +2,25 @@
 import ImportData from '@/components/ImportData.vue'
 
 export default {
-    name: 'App',
-    components: {
-        ImportData,
-    },
-    data() {
-        return {}
-    }
+  name: 'App',
+  components: {
+    ImportData,
+  },
+  data() {
+    return {}
   }
+}
 </script>
 
 
 <template>
   <header>
   </header>
-  <main >
-      <ImportData/>
+  <main>
+    <BNavbar v-b-color-mode="'dark'" toggleable="lg" variant="primary">
+      <BNavbarBrand href="#">NavBar</BNavbarBrand>
+    </BNavbar>
+    <ImportData />
   </main>
 </template>
 

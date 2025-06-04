@@ -1,22 +1,31 @@
 <template>
     <div id="container">
-    <div class="page-navigation">
-        <BButton :disabled="currentPage <= 1" @click="updatePage('decr')">&larr;</BButton>
-        <span>{{ currentPage }}/{{ totalPages }}</span>
-        <BButton :disabled="currentPage >= totalPages" @click="updatePage('incr')">&rarr;</BButton>
-    </div>
-    <div ref="pdfLayersWrapper" class="pdf__layers" :style="{
-        height: `${height}px`,
-        width: `${width}px`,
-        border: '1px solid #dfdfdf',
-        margin: '0 auto'
-    }">
-        <div class="pdf__canvas-layer">
-            <canvas ref="canvasLayer" />
+        <div class="page-navigation">
+            <BButtonToolbar key-nav aria-label="Toolbar with button groups" justify >
+                <BButtonGroup class="mx-1" size="sm">
+                    <BButton  :disabled="currentPage <= 1" @click="updatePage('decr')">&larr;</BButton>
+                    <span class="page-btn-grp">{{ currentPage }}/{{ totalPages }}</span>
+                    <BButton  :disabled="currentPage >= totalPages" @click="updatePage('incr')">&rarr;</BButton>
+                </BButtonGroup>
+
+                <BButtonGroup class="mx-1" size="sm" placement="right" >
+                    <BButton @click="highlightText">Hightlight Text</BButton>
+                    <BButton @click="extractTextRadio">Select Text ({{ formatBoolean(this.extractText) }})</BButton>
+                </BButtonGroup>
+            </BButtonToolbar>
         </div>
-        <div ref="textLayer" class="pdf__text-layer"></div>
-        <div ref="annotationLayer" class="pdf__annotation-layer"></div>
-    </div>
+        <div ref="pdfLayersWrapper" class="pdf__layers" :style="{
+            height: `${height}px`,
+            width: `${width}px`,
+            border: '1px solid #dfdfdf',
+            margin: '0 auto'
+        }">
+            <div class="pdf__canvas-layer">
+                <canvas ref="canvasLayer" />
+            </div>
+            <div ref="textLayer" class="pdf__text-layer"></div>
+            <div ref="annotationLayer" class="pdf__annotation-layer"></div>
+        </div>
     </div>
 </template>
 
@@ -37,6 +46,8 @@ export default {
 
             width: null,
             height: null,
+
+            extractText: true,
         }
     },
     async mounted() {
@@ -108,7 +119,7 @@ export default {
             return this.renderCanvas(page, canvasLayer, viewport);
         },
 
-
+        //TODO:annotation layers fail
         async getAnnotations(pageProxy) {
             const annotations = await pageProxy.getAnnotations({ intent: "display" });
             return annotations;
@@ -234,11 +245,104 @@ export default {
             };
             page.render(renderContext);
         }*/
+
+        //TODO:not integrated
+        formatBoolean(text) { return text == true ? 'on' : 'off' },
+        async extractTextRadio() {
+            const app = await this.getApp
+            const doc = document.getElementById('pdf-js-viewer').contentWindow.document
+            this.extractText = !this.extractText
+            if (this.extractText) {
+                doc.addEventListener('selectionchange', this.logTextToNotesManager)
+            } else {
+                doc.removeEventListener('selectionchange', this.logTextToNotesManager)
+                const reference = `<div style="font-weight: bold">${this.getDocument.filepath}, pg.${app.page} |</div> ${this.newNote}`
+                const noteItem = {
+                    id: Date.now(),
+                    list: 'stagingNotes',
+                    type: 'auto',
+                    innerHTML: reference,
+                    innerText: reference
+                }
+                this.userContentStore.newNote = noteItem
+                this.userContentStore.addNewNoteToManager()
+                this.highlightText()
+            }
+            return true
+        },
+        logTextToNotesManager(e) {
+            const txt = this.getSelectedText(e)
+            this.newNote = txt
+        },
+        getSelectedText(e) {
+            const iframeWindow = document.getElementById('pdf-js-viewer').contentWindow.document
+            if (iframeWindow) {
+                return iframeWindow.getSelection().toString()
+            }
+            else if (document.selection) {
+                return document.selection.createRange().text
+            }
+            return '';
+        },
+        highlightText() {
+            const selected = this.getSelectionCoords()
+            this.showHighlight(selected)
+        },
+        getSelectionCoords() {
+            const iframeWindow = document.getElementById('pdf-js-viewer').contentWindow
+            const app = document.getElementById('pdf-js-viewer').contentWindow.PDFViewerApplication
+            const pageIndex = app.page - 1
+
+            const _page = app.pdfViewer._pages[pageIndex]
+            const pageRect = _page.canvas.getClientRects()[0]
+            if (iframeWindow.getSelection().rangeCount == 0) {
+                console.log('ERROR: no text selected')
+                return {}
+            }
+            if (iframeWindow.getSelection().rangeCount > 1) {
+                console.log('ERROR: only a single, continuous text may be selected')
+                return {}
+            }
+            const selectionRects = iframeWindow.getSelection().getRangeAt(0).getClientRects()
+            const viewport = _page.viewport
+            const selectionRectsList = Object.values(selectionRects)
+            const selected = selectionRectsList.map(function (r) {
+                return viewport.convertToPdfPoint(r.left - pageRect.x, r.top - pageRect.y).concat(
+                    viewport.convertToPdfPoint(r.right - pageRect.x, r.bottom - pageRect.y));
+            })    // left, top, right, bottom
+            return { pageIndex: pageIndex, coordinates: selected }      //only allow a single, continuous selection
+        },
+        showHighlight({ pageIndex, coordinates }) {
+            const app = document.getElementById('pdf-js-viewer').contentWindow.PDFViewerApplication
+            const _page = app.pdfViewer._pages[pageIndex]
+            const viewport = _page.viewport
+
+            coordinates.forEach(function (rect) {
+                let highlightColor = 'ff990080'   //generateColor();    transparency of 80%
+                let bounds = viewport.convertToViewportRectangle(rect);
+
+                var x1 = Math.min(bounds[0], bounds[2]);
+                var y1 = Math.min(bounds[1], bounds[3]);
+                var width = Math.abs(bounds[0] - bounds[2]);
+                var hight = Math.abs(bounds[1] - bounds[3]);
+
+                var el = createRectDiv([x1, y1, width, hight], highlightColor);
+                _page.textLayer.div.appendChild(el)
+            }, this)
+        },
     }
 }
 </script>
 
-<style >
+<style>
+
+.page-btn-grp{
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+
+
 #container {
     font-family: Avenir, Helvetica, Arial, sans-serif;
     text-align: center;

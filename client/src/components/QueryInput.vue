@@ -2,13 +2,13 @@
     <h1>Search</h1>
     <BAccordion flush>
         <BAccordionItem title="Query data" >
-            <BForm name="uploadForm" @submit.prevent>
-                <BFormGroup label="Document search:" description="">
+            <BForm name="uploadForm" @submit.prevent >
+                <BFormGroup label="Document search:" description="" >
                     <BFormInput id="queryInput" placeholder="Where is risk in contract?" v-model="prompts.user" @keyup.enter.prevent="runPreConfigQuery"/>
-                    <BButton variant="primary" @click="runPreConfigQuery('user')">Submit</BButton>
-                    <BButton variant="primary" @click="clearQuery('user')">Clear</BButton>
+                    <BButton size="sm" variant="primary" @click="runPreConfigQuery('user')">Submit</BButton>
+                    <BButton size="sm" variant="primary" @click="clearQuery('user')">Clear</BButton>
                     <!--<BButton variant="primary" @click="minimizeResultsDisplay('user')">Minimize</BButton>-->
-                    <BButton v-b-toggle.user-results variant="primary" >Collapse</BButton>
+                    <BButton size="sm" v-b-toggle.user-results variant="primary" >Collapse</BButton>
                 </BFormGroup>
                 <BCollapse id="user-results" visible>
                 <BCard>
@@ -22,8 +22,8 @@
         <BAccordionItem title="Pre-configured queries" >
             <BCard>
                 <BCardText title="Coverage / amounts" style="max-width: 20rem">
-                    <BButton variant="primary" @click="runPreConfigQuery('coverage')">Update</BButton>
-                    <BButton v-b-toggle.coverage-results variant="primary" >Collapse</BButton>
+                    <BButton size="sm" variant="primary" @click="runPreConfigQuery('coverage')">Update</BButton>
+                    <BButton size="sm" v-b-toggle.coverage-results variant="primary" >Collapse</BButton>
                     <BCollapse id="coverage-results" visible>
                     <ul v-for="item in results.coverage">
                         <li> <strong>{{ item.index }} )</strong> [{{ item.dist }}] {{ item.text }} </li>
@@ -33,8 +33,8 @@
             </BCard>
             <BCard>
                 <BCardText title="Exclusions" style="max-width: 20rem">
-                    <BButton variant="primary" @click="runPreConfigQuery('exclusions')">Update</BButton>
-                    <BButton v-b-toggle.exclusions-results variant="primary" >Collapse</BButton>
+                    <BButton size="sm" variant="primary" @click="runPreConfigQuery('exclusions')">Update</BButton>
+                    <BButton size="sm" v-b-toggle.exclusions-results variant="primary" >Collapse</BButton>
                     <BCollapse id="exclusions-results" visible>
                     <ul v-for="item in results.exclusions">
                         <li> <strong>{{ item.index }} )</strong> [{{ item.dist }}] {{ item.text }} </li>
@@ -44,8 +44,8 @@
             </BCard>
             <BCard>
                 <BCardText title="Conditions" style="max-width: 20rem">
-                    <BButton variant="primary" @click="runPreConfigQuery('conditions')">Update</BButton>
-                    <BButton v-b-toggle.conditions-results variant="primary" >Collapse</BButton>
+                    <BButton size="sm" variant="primary" @click="runPreConfigQuery('conditions')">Update</BButton>
+                    <BButton size="sm" v-b-toggle.conditions-results variant="primary" >Collapse</BButton>
                     <BCollapse id="conditions-results" visible>
                     <ul v-for="item in results.conditions">
                         <li> <strong>{{ item.index }} )</strong> [{{ item.dist }}] {{ item.text }} </li>
@@ -76,7 +76,7 @@ export default {
     data() {
         return {
             queryInput: null,
-            displayResults: [],
+            //TODO: change structure to something like: `user{display:true, prompts:[], results:[]}`
             display:{
                 user: true,
                 coverage: true,
