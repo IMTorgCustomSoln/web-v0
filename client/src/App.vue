@@ -15,13 +15,9 @@ export default {
 
 <template>
   <header>
-    <div class="wrapper">
-    </div>
   </header>
-  <main>
-    <div class="wrapper">
+  <main >
       <ImportData/>
-    </div>
   </main>
 </template>
 

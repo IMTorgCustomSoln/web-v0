@@ -1,4 +1,7 @@
 <template>
+    <BContainer>
+        <BRow>
+            <BCol>
     <h1>Upload</h1>
     <BForm name="uploadForm" @submit.prevent>
         <BFormGroup label="Upload file" description="">
@@ -6,18 +9,27 @@
             <BButton variant="primary" @click="uploadInput">Upload</BButton>
             <BButton variant="primary" @click="processData">Process</BButton>
         </BFormGroup>
+        </BForm>
+            </BCol>
+            </BRow>
+            <BRow>
+                <BCol>
         <BCard>
             <BCardText title="Card Title" style="max-width: 20rem">
                 {{ fileContent }}
             </BCardText>
         </BCard>
-        <BFormGroup>
-            <QueryInput ref="refQueryInput"/>
-        </BFormGroup>
         <BCard>
             <PdfDisplay ref="refPdfDisplay"/>
         </BCard>
-    </BForm>
+        </BCol>
+        <BCol>
+        <BFormGroup>
+            <QueryInput ref="refQueryInput"/>
+        </BFormGroup>
+        </BCol>
+        </BRow>
+    </BContainer>
 </template>
 
 <script>

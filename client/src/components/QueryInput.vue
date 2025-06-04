@@ -1,11 +1,12 @@
 <template>
-    <h1>Results</h1>
+    <h1>Search</h1>
     <BAccordion flush>
         <BAccordionItem title="Query data" >
             <BForm name="uploadForm" @submit.prevent>
                 <BFormGroup label="Query your data:" description="">
                     <BFormInput id="queryInput" placeholder="Where is risk in contract?" v-model="queryInput" @keyup.enter.prevent="submitQuery"/>
                     <BButton variant="primary" @click="submitQuery">Submit</BButton>
+                    <BButton variant="primary" @click="clearQuery">Clear</BButton>
                 </BFormGroup>
                 <BCard>
                     <ul v-for="item in displayResults">
@@ -94,6 +95,9 @@ export default {
             console.log(distances.length)
             let sortedDistances = sortArrayByKey(distances, 'dist', true)
             this.displayResults.splice(0, this.displayResults.length, ...sortedDistances.slice(0, 10));
+        },
+        clearQuery(){
+            this.displayResults.length = 0
         }
     }
 }

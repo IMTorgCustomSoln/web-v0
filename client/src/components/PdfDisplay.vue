@@ -1,4 +1,5 @@
 <template>
+    <div id="container">
     <div class="page-navigation">
         <BButton :disabled="currentPage <= 1" @click="updatePage('decr')">&larr;</BButton>
         <span>{{ currentPage }}/{{ totalPages }}</span>
@@ -15,6 +16,7 @@
         </div>
         <div ref="textLayer" class="pdf__text-layer"></div>
         <div ref="annotationLayer" class="pdf__annotation-layer"></div>
+    </div>
     </div>
 </template>
 
@@ -236,8 +238,8 @@ export default {
 }
 </script>
 
-<style>
-#app {
+<style >
+#container {
     font-family: Avenir, Helvetica, Arial, sans-serif;
     text-align: center;
     color: #2c3e50;
