@@ -22,8 +22,10 @@
         <BAccordionItem title="Pre-configured queries" >
             <BCard>
                 <BCardText title="Coverage / amounts" style="max-width: 20rem">
+                    <BButton size="sm" variant="primary" @click="addSelectedTextToQuery">Add Text</BButton>
                     <BButton size="sm" variant="primary" @click="runPreConfigQuery('coverage')">Update</BButton>
                     <BButton size="sm" v-b-toggle.coverage-results variant="primary" >Collapse</BButton>
+
                     <BCollapse id="coverage-results" visible>
                     <ul v-for="item in results.coverage">
                         <li> <strong>{{ item.index }} )</strong> [{{ item.dist }}] {{ item.text }} </li>
@@ -155,6 +157,12 @@ export default {
         minimizeResultsDisplay(queryType){
             let dataStruct = this.getQueryDataStructures(queryType, 'display')
             dataStruct = !dataStruct
+        },
+        addSelectedTextToQuery(){
+            const text = window.getSelection().toString()
+            console.log(text)
+            console.log('but where to put it???')
+            return true
         }
     }
 }

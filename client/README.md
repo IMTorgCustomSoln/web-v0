@@ -44,6 +44,14 @@ _Phase I_
 
 _Phase II_
 
+* create new component for QueryInput.vue button groups
+* fix `rpm run dev` so workers load
+* obfuscate code and cause failure have N+5 days
+* use s3 as a static web server
+* (maybe) secure s3 with simple password
+
+_Phase III_
+
 * ~~display pdf in viewer~~
 * save embeddings with associated document section text to rxdb
 * create query input
