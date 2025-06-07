@@ -3,15 +3,31 @@
 
             <BButtonGroup class="mx-1" size="sm" placement="right">
                 <BButton variant="primary" @click="showTngData = !showTngData">Training</BButton>
-                <BOffcanvas v-model="showTngData" placement="end"/>
             </BButtonGroup>
+    <BOffcanvas v-model="showTngData" placement="end">
+    <div v-if="componentMounted">
+        <BButton variant="primary" @click="runPreConfigQueries()">ReRun Models</BButton>
+    <h3>Coverage</h3>
+    <ul v-for="item in this.$refs.itemCoverage.prompts">
+        <li>{{ item }} </li>
+    </ul>
+    <h3>Exclusions</h3>
+    <ul v-for="item in this.$refs.itemExclusions.prompts">
+        <li>{{ item }} </li>
+    </ul>
+    <h3>Conditions</h3>
+    <ul v-for="item in this.$refs.itemConditions.prompts">
+        <li>{{ item }} </li>
+    </ul>
+    </div>
+    </BOffcanvas>
 
     <BAccordion flush>
         <BAccordionItem title="Query data">
             <QueryItem :displayInput=true title="" category="user" />
         </BAccordionItem>
         <BAccordionItem title="Pre-configured queries">
-            <QueryItem :displayInput=false title="Coverage" category="coverage" ref="itemConverage" />
+            <QueryItem :displayInput=false title="Coverage" category="coverage" ref="itemCoverage" />
             <QueryItem :displayInput=false title="Exclusions" category="exclusions" ref="itemExclusions" />
             <QueryItem :displayInput=false title="Conditions" category="conditions" ref="itemConditions" />
         </BAccordionItem>
@@ -42,6 +58,7 @@ export default {
     data() {
         return {
             showTngData: false,
+            componentMounted: false,
             /*
             queryInput: null,
             //TODO: change structure to something like: `user{display:true, prompts:[], results:[]}`
@@ -76,10 +93,11 @@ export default {
         ...mapStores(useUserContent),
     },
     methods: {
-        async runPreConfigQuery() {
+        async runPreConfigQueries() {
             for (let [key, ref] of Object.entries(this.$refs)) {
                 ref.runPreConfigQuery()
             }
+            this.componentMounted = true
         },
         /*
         getQueryDataStructures(queryType, attr){

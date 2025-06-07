@@ -117,7 +117,7 @@ export default {
             const pdfComponent = this.$refs.refPdfDisplay
             const queryComponent = this.$refs.refQueryInput
 			if (pdfComponent) {pdfComponent.processLoadingTask();}
-            if (queryComponent) {queryComponent.runPreConfigQuery();}
+            if (queryComponent) {queryComponent.runPreConfigQueries();}
         },
         async uploadFiles(files) {
             // process files selected for upload and return an array of records
