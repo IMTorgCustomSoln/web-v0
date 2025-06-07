@@ -25,7 +25,7 @@
         </BCol>
         <BCol>
         <BFormGroup>
-            <QueryInput ref="refQueryInput"/>
+            <QueryPanel ref="refQueryInput"/>
         </BFormGroup>
         </BCol>
         </BRow>
@@ -34,7 +34,7 @@
 
 <script>
 import PdfDisplay from '@/components/PdfDisplay.vue'
-import QueryInput from '@/components/QueryInput.vue'
+import QueryPanel from '@/components/QueryPanel.vue'
 
 import { getVectorFromTextWithWorker } from '@/components/utils/worker-scheduler.js';
 import { getFileRecord } from '@/components/utils/pdf_extract.js'
@@ -49,7 +49,7 @@ export default {
     name: 'ImportData',
     components:{
         PdfDisplay,
-        QueryInput
+        QueryPanel
     },
     data() {
         return {

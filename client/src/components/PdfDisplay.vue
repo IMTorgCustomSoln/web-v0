@@ -9,8 +9,10 @@
                 </BButtonGroup>
 
                 <BButtonGroup class="mx-1" size="sm" placement="right" >
+                    <!--TODO
                     <BButton @click="highlightText">Hightlight Text</BButton>
-                    <BButton @click="extractTextRadio">Select Text ({{ formatBoolean(this.extractText) }})</BButton>
+                    ~~ <BButton @click="extractTextRadio">Select Text ({{ formatBoolean(this.extractText) }})</BButton> ~~
+                    -->
                 </BButtonGroup>
             </BButtonToolbar>
         </div>

@@ -74,7 +74,7 @@ import { mapStores } from 'pinia'
 import { useUserContent } from '@/stores/UserContent'
 
 export default {
-    name: 'QueryInput',
+    name: 'QueryPanel',
     data() {
         return {
             queryInput: null,

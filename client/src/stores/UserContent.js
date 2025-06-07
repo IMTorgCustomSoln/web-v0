@@ -8,6 +8,19 @@ export const useUserContent = defineStore('userContent', {
     state:() => {
         return{
             name: '<John Doe>',
+            prompts:{
+              user: [null],
+                coverage:[
+                    'What is the coverage?', 
+                    'What is the amount?'
+                ],
+                exclusions:[
+                    'What exclusions are there?'
+                ],
+                conditions:[
+                    'What conditions are there?'
+                ]
+            },
 
             //temporary staging
             processedFiles: [],
