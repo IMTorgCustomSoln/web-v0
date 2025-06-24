@@ -1,27 +1,31 @@
 <template>
     <BForm name="uploadForm" @submit.prevent>
         <BFormGroup v-if="displayInput">
-            <BInputGroup >
+            <BInputGroup>
                 <BFormInput placeholder="Where is the risk?" v-model="userSubmit"
                     @keyup.enter.prevent="runPreConfigQuery" />
                 <BButton size="sm" variant="primary" @click="runPreConfigQuery">Submit</BButton>
-            </BInputGroup>   
+            </BInputGroup>
         </BFormGroup>
         <BFormGroup>
-            <BButtonGroup size="sm" >
-            {{ title }}
-            <BButton v-if="displayInput"  variant="primary" @click="clearQuery">Clear</BButton>
-            <BButton v-if="!displayInput" variant="primary" @click="visible = !visible">Collapse</BButton>
-            <BButton v-if="!displayInput" variant="primary" @click="addSelectedTextToQuery">Add Selected Text
-                to TngData</BButton>
+            <BButtonGroup size="sm">
+                {{ title }}
+                <BButton v-if="displayInput" variant="primary" @click="clearQuery">Clear</BButton>
+                <BButton v-if="!displayInput" variant="primary" @click="visible = !visible">Collapse</BButton>
+                <BButton v-if="!displayInput" variant="primary" @click="addSelectedTextToQuery">Add Selection</BButton>
+                <BFormSpinbutton v-model="cutoff" size="sm" min="0" max="2" step="0.100" />
+                <BButton variant="primary" @click="runPreConfigQuery">Submit</BButton>
             </BButtonGroup>
-        <BCollapse id="results" v-model="visible">
-            <BCard>
-                <ul v-for="item in results">
-                    <li> <strong>{{ item.index }} )</strong> [{{ item.dist }}] {{ item.text }} </li>
-                </ul>
-            </BCard>
-        </BCollapse>
+            <BCollapse id="results" v-model="visible">
+                <BCard>
+                    <ul v-for="item in results">
+                        <div @click="selectItem(item)">
+                            <li> <strong>pg.{{ item.page }} )</strong> [score: {{ item.dist }}] <br>{{ item.text }}
+                            </li>
+                        </div>
+                    </ul>
+                </BCard>
+            </BCollapse>
         </BFormGroup>
     </BForm>
 </template>
@@ -39,6 +43,7 @@ export default {
     props: ['displayInput', 'title', 'category'],
     data() {
         return {
+            cutoff: 0.80,
             visible: true,
             userSubmit: null,
             prompts: [],
@@ -50,23 +55,58 @@ export default {
         ...mapStores(useUserContent),
     },
     methods: {
-        async runPreConfigQuery() {
+        /**
+        * Bag Of Words Search
+        * Create one vector from all prompts, then get distances for all 
+        * pdf sentences.
+        */
+        async runPreConfigQueryBoW() {
             this.prompts.push(this.userSubmit)
             const providedPrompts = this.userContentStore['prompts'][this.category]
             this.prompts.push(...providedPrompts)
-            const arr = toRaw(this.prompts).filter(function( element ) {
+            const arr = toRaw(this.prompts).filter(function (element) {
                 if (![undefined, null].includes(element)) {
                     return element
                 }
             });
             this.queryInput = arr.reduce((acc, item) => acc + ' ' + item)
-            const distances = await this.query()
+            const distances = await this.query(this.queryInput)
             this.queryInput = null
             this.prepareAndDisplayResults(distances)
         },
-        async query() {
-            console.log(this.queryInput)
-            const searchEmbedding = await getVectorFromTextWithWorker(this.queryInput)
+        /** runPreConfigQueryHighestSimilarity
+        * Hightest Similarity Score Search
+        * Run query on each prompt, then take highest scores within 
+        * cutoff.  Ensure to remove duplicates.
+        */
+        async runPreConfigQuery() {
+            //async function test(){
+            const cutoff = 0.8
+            this.prompts.push(this.userSubmit)
+            const arr = JSON.parse(JSON.stringify(this.prompts))
+            const providedPrompts = this.userContentStore['prompts'][this.category]
+            arr.push(...providedPrompts)
+            const cleanArr = toRaw(arr).filter(function (element) {
+                if (![undefined, null].includes(element)) {
+                    return element
+                }
+            });
+            this.queryInput = cleanArr
+            const results = []
+            for (const item of this.queryInput) {
+                const distances = await this.query(item)
+                const dist_within_cutoff = distances.filter(item => item.dist <= this.cutoff)
+                results.push(...dist_within_cutoff)
+            }
+            const uniqueResults = Array.from(
+                new Set(results.map(obj => JSON.stringify(obj)))
+            ).map(str => JSON.parse(str))
+            this.queryInput = null
+            this.prepareAndDisplayResults(uniqueResults)
+        },
+        async query(item) {
+            console.log(item)
+            const searchEmbedding = await getVectorFromTextWithWorker(item)
             let distances = []
             for (let [idx, docRec] of Object.entries(this.userContentStore.processedFiles)) {
                 const vectorObj = await docRec.getVector()
@@ -75,7 +115,7 @@ export default {
                     console.log(item.embedding)
                     let dist = euclideanDistance(searchEmbedding, item.embedding)
                     if (dist != undefined) {
-                        item.dist = dist.toFixed(3)
+                        item.dist = parseFloat(dist.toFixed(3))
                         distances.push(item)
                     }
                 }
@@ -84,14 +124,18 @@ export default {
         },
         prepareAndDisplayResults(distances) {
             let sortedDistances = sortArrayByKey(distances, 'dist', true)
-            this.results.splice(0, this.results.length, ...sortedDistances.slice(0, 10));
+            this.results.splice(0, this.results.length, ...sortedDistances)//.slice(0, 10));
+        },
+        selectItem(item) {
+            console.log(item)
+            this.userContentStore['selectedSnippet'] = item
         },
         clearQuery() {
             this.results.length = 0
         },
         addSelectedTextToQuery() {
             const text = window.getSelection().toString()
-            if(text.length > 1000){
+            if (text.length > 1000) {
                 alert('Text must be less than 1000 characters')
                 return false
             }

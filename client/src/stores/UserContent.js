@@ -2,6 +2,7 @@ import { defineStore } from "pinia"
 
 import { TopicRecord, NoteRecord } from "./data"
 import { camelize } from '@/components/utils/utils.js'
+import prompts from '../../../data/prompts.json'
 
 
 export const useUserContent = defineStore('userContent', {
@@ -9,17 +10,10 @@ export const useUserContent = defineStore('userContent', {
         return{
             name: '<John Doe>',
             prompts:{
-              user: [null],
-                coverage:[
-                    'What is the coverage?', 
-                    'What is the amount?'
-                ],
-                exclusions:[
-                    'What exclusions are there?'
-                ],
-                conditions:[
-                    'What conditions are there?'
-                ]
+              user: [''],
+              coverage: prompts['coverage'],
+              exclusions: prompts['exclusions'],
+              conditions: prompts['conditions']
             },
 
             //temporary staging
@@ -28,7 +22,7 @@ export const useUserContent = defineStore('userContent', {
 
             //permanent
             selectedDocument: '1',        //TODO:make explicit that this is the doc.id and it is a string
-            selectedSnippet: null,
+            selectedSnippet: {page: '1', index: 11, text: '00 If the Named Insured cancels this Policy, the m…retained premium shall be no less than 25% ITEM 4', embedding: Array(384), dist: 0.373},
             
             documentsIndex: {
               documents: [],
@@ -61,7 +55,8 @@ export const useUserContent = defineStore('userContent', {
           return []
         }
       }*/
-      getSelectedDocument: (state)=>state.selectedDocument > -1 ? state.selectedDocument : 0
+      getSelectedDocument: (state)=>state.selectedDocument > -1 ? state.selectedDocument : 0,
+      getSelectedSnippet: (state)=>state.selectedSnippet
     },
     actions:{
         getName(){

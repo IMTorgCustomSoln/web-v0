@@ -38,6 +38,11 @@ import { toRaw } from 'vue'
 
 export default {
     name: 'PdfDisplay',
+    watch:{
+        'changeInStateSelectedSnippet'(newValue, oldValue) { 
+            highlightText();
+        }
+    },
     data() {
         return {
             record: null,
@@ -58,8 +63,52 @@ export default {
     },
     computed: {
         ...mapStores(useUserContent),
+        changeInStateSelectedSnippet(){return useUserContent.getSelectedSnippet}
     },
     methods: {
+        async highlightText(){
+            const page = this.userContentStore['selectedSnippet'].page
+            const searchText = this.userContentStore['selectedSnippet'].text
+            await this.updatePage(page)
+            const pageProxy = await toRaw(this.pdf).getPage(this.currentPage)
+            const textContent = await pageProxy.getTextContent()//.then(function(textContent){
+            // Search for the text to highlight
+            var textIndex = textContent.items.findIndex(item => item.str.includes(searchText.substr(10,5)));
+            if(textIndex != -1) {
+                // Get coordinates of the text
+                let textItem = textContent.items[textIndex]
+                let viewport = pageProxy.getViewport()
+                viewport['scale'] =  1.0
+                let rect = viewport['viewBox']
+                rect[0] = textItem.transform[4]
+                rect[1] = textItem.transform[5] 
+                rect[3] = textItem.width
+                rect[4] = textItem.height
+                const highlightColor = this.generateColor()
+                const el = this.createRectDiv(rect, highlightColor)
+                pageProxy.textLayer.appendChild(el)
+                /* Add the annotation to the page
+                // Create highlight annotation
+                let highlightAnnot = {
+                    type: "highlight",
+                    rect: rect,
+                    color: [1, 1, 0], // Yellow
+                    }
+                //pageProxy.addAnnotation(highlightAnnot)
+                // Re-render the page*/
+                pageProxy.render()
+            }
+        },
+        generateColor(){return Math.floor(Math.random()*16777215).toString(16);},
+        createRectDiv(boundBox, highlightColor){
+            // console.log(randomColor);
+            var el = document.createElement('div');
+            el.setAttribute('class', 'hiDiv')
+            el.setAttribute('style', 'position: absolute; background-color: #'+highlightColor+'; opacity: 0.5;' + 
+            'left:' + boundBox[0] + 'px; top:' + boundBox[1] + 'px;' +
+            'width:' + boundBox[2] + 'px; height:' + boundBox[3] + 'px;');
+            return el;
+        },
         updateRecord() {
             const records = this.userContentStore.processedFiles
             this.record = records[0]
@@ -286,10 +335,11 @@ export default {
             }
             return '';
         },
+        /*
         highlightText() {
             const selected = this.getSelectionCoords()
             this.showHighlight(selected)
-        },
+        },*/
         getSelectionCoords() {
             const iframeWindow = document.getElementById('pdf-js-viewer').contentWindow
             const app = document.getElementById('pdf-js-viewer').contentWindow.PDFViewerApplication
@@ -334,6 +384,10 @@ export default {
         },
     }
 }
+
+
+
+
 </script>
 
 <style>

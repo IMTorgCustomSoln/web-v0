@@ -1,6 +1,5 @@
 <template>
     <h1>Search</h1>
-
             <BButtonGroup class="mx-1" size="sm" placement="right">
                 <BButton variant="primary" @click="showTngData = !showTngData">Training</BButton>
             </BButtonGroup>
@@ -24,6 +23,7 @@
 
     <BAccordion flush>
         <BAccordionItem title="Query data">
+            <!--<QueryItem :displayInput=true title="" />-->
             <QueryItem :displayInput=true title="" category="user" />
         </BAccordionItem>
         <BAccordionItem title="Pre-configured queries">
