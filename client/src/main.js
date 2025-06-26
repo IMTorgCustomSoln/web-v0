@@ -9,10 +9,12 @@ import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-vue-next/dist/bootstrap-vue-next.css'
 
 //pdf
-import * as pdfjsLib from "pdfjs-dist/build/pdf"
+import * as pdfjsLib from "pdfjs-dist"
 import *  as pdfjsViewer from "pdfjs-dist/web/pdf_viewer"
-import * as pdfjsWorker from "pdfjs-dist/build/pdf.worker.js"
-pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker
+pdfjsLib.GlobalWorkerOptions.workerPort = new Worker(
+  new URL('pdfjs-dist/build/pdf.worker.mjs', import.meta.url),
+  { type: 'module' },
+);
 
 import App from './App.vue'
 
