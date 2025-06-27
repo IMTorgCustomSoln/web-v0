@@ -63,11 +63,19 @@ export default {
     watch: {
         async currentPage(newValue) {
             await this.updatePage(newValue)
-        }
+        },
+        'useUserContent.getSelectedSnippet':{
+            handler(newValue, oldValue) {
+            // Perform actions when 'anotherObject' or its nested properties change
+            console.log('hi from pdfDisplay!')
+            console.log(newValue)
+          },
+          deep: true
+        },
     },
     computed: {
         ...mapStores(useUserContent),
-        changeInStateSelectedSnippet() { return useUserContent.getSelectedSnippet }
+        //changeInStateSelectedSnippet() { return useUserContent.getSelectedSnippet }
     },
     methods: {
         // page
@@ -187,63 +195,62 @@ export default {
 
 
         // functionality
-        async renderHighlightAnnotations() {
-            const page = parseInt(this.userContentStore['selectedSnippet'].page)
-            const pageProxy = await this.pdfDocProxy.getPage(page)
-            const annotations = await pageProxy.getAnnotations()
-            annotations.forEach(function (annotation) {
-                if (annotation.subtype === 'Highlight') {
-                    const highlightRect = annotation.rect;
-                    const highlight = document.createElement('div');
-                    highlight.style.position = 'absolute';
-                    highlight.style.left = highlightRect[0] + 'px';
-                    highlight.style.top = highlightRect[1] + 'px';
-                    highlight.style.width =
-                        highlightRect[2] - highlightRect[0] + 'px';
-                    highlight.style.height =
-                        highlightRect[3] - highlightRect[1] + 'px';
-                    highlight.style.backgroundColor = 'yellow';
-                    highlight.style.opacity = '0.5';
-                    document.body.appendChild(highlight);
-                }
-            })
-        },
-        async highlightText() {
+        async getTextLocation() {
             const page = parseInt(this.userContentStore['selectedSnippet'].page)
             const searchText = this.userContentStore['selectedSnippet'].text
             const pageProxy = await this.pdfDocProxy.getPage(page)
             const textContent = await pageProxy.getTextContent()
+
             // Search for the text to highlight
             var textIndex = textContent.items.findIndex(item => item.str.includes(searchText.substr(10, 5)));
-            if (textIndex != -1) {
+            //if (textIndex != -1) {
+            if (true) {
                 // Get coordinates of the text
-                let textItem = textContent.items[textIndex]
+                //let textItem = textContent.items[textIndex]
                 const viewport = pageProxy.getViewport({ scale: 1 })
-                let rect = viewport['viewBox']
-                rect[0] = textItem.transform[4]
-                rect[1] = textItem.transform[5]
-                rect[3] = textItem.width
-                rect[4] = textItem.height
-                const highlightColor = this.generateColor()
-                const el = this.createRectDiv(rect, highlightColor)
-                const { canvasLayer, textLayer, annotationLayer } = this.$refs;
-                annotationLayer.appendChild(el)
+                const selectedRects = window.getSelection().getRangeAt(0).getClientRects()
             }
+            return selectedRects
         },
-        generateColor() {
-            return Math.floor(Math.random() * 16777215).toString(16);
-        },
-        createRectDiv(boundBox, highlightColor) {
-            // console.log(randomColor);
-            var el = document.createElement('div');
-            el.setAttribute('class', 'hiDiv')
-            el.setAttribute('style', 'position: absolute; background-color: #' + highlightColor + '; opacity: 0.5;' +
-                'left:' + boundBox[0] + 'px; top:' + boundBox[1] + 'px;' +
-                'width:' + boundBox[2] + 'px; height:' + boundBox[3] + 'px;');
-            return el;
-        },
+        // ref: https://gist.github.com/yurydelendik/f2b846dae7cb29c86d23
+        async highlightText() {
+            const page = parseInt(this.userContentStore['selectedSnippet'].page)
+            const pageProxy = await this.pdfDocProxy.getPage(page)
 
-    }
+            // Get coordinates of the text
+            const viewport = pageProxy.getViewport({ scale: 1 })
+            const selectedRects = window.getSelection().getRangeAt(0).getClientRects()
+            const r = selectedRects[0]
+
+            const rect = viewport.convertToPdfPoint(r.left, r.top).concat(
+                viewport.convertToPdfPoint(r.right, r.bottom))
+
+            const bounds = viewport.convertToViewportRectangle(rect)
+            const el = document.createElement('div')
+
+            const highlightRect = bounds
+            el.style.position = 'absolute';
+            el.style.left = highlightRect[0] + 'px';
+            el.style.top = highlightRect[1] + 'px';
+            el.style.width = highlightRect[2] - highlightRect[0] + 'px';
+            el.style.height = highlightRect[3] - highlightRect[1] + 'px';
+            el.style.backgroundColor = 'yellow';
+            el.style.opacity = '0.5';
+            document.body.appendChild(el);
+        }
+    },
+    generateColor() {
+        return Math.floor(Math.random() * 16777215).toString(16);
+    },
+    createRectDiv(boundBox, highlightColor) {
+        // console.log(randomColor);
+        var el = document.createElement('div');
+        el.setAttribute('class', 'hiDiv')
+        el.setAttribute('style', 'position: absolute; background-color: #' + highlightColor + '; opacity: 0.5;' +
+            'left:' + boundBox[0] + 'px; top:' + boundBox[1] + 'px;' +
+            'width:' + boundBox[2] + 'px; height:' + boundBox[3] + 'px;');
+        return el;
+    },
 }
 
 

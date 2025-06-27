@@ -22,7 +22,7 @@ export const useUserContent = defineStore('userContent', {
 
             //permanent
             selectedDocument: '1',        //TODO:make explicit that this is the doc.id and it is a string
-            selectedSnippet: {page: '1', index: 11, text: '00 If the Named Insured cancels this Policy, the m…retained premium shall be no less than 25% ITEM 4', embedding: Array(384), dist: 0.373},
+            selectedSnippet: null,        //{page: '1', index: 11, text: '00 If the Named Insured cancels this Policy, the m…retained premium shall be no less than 25% ITEM 4', embedding: Array(384), dist: 0.373},
             
             documentsIndex: {
               documents: [],

@@ -22,14 +22,18 @@
     </BOffcanvas>
 
     <BAccordion flush>
-        <BAccordionItem title="Query data">
+        <BAccordionItem title="Coverage">
+            <QueryItem :displayInput=false title="Coverage" category="coverage" ref="itemCoverage" />
+        </BAccordionItem>
+        <BAccordionItem title="Exclusions">
+            <QueryItem :displayInput=false title="Exclusions" category="exclusions" ref="itemExclusions" />
+        </BAccordionItem>
+        <BAccordionItem title="Conditions">
+            <QueryItem :displayInput=false title="Conditions" category="conditions" ref="itemConditions" />
+        </BAccordionItem>
+        <BAccordionItem title="Custom Query">
             <!--<QueryItem :displayInput=true title="" />-->
             <QueryItem :displayInput=true title="" category="user" />
-        </BAccordionItem>
-        <BAccordionItem title="Pre-configured queries">
-            <QueryItem :displayInput=false title="Coverage" category="coverage" ref="itemCoverage" />
-            <QueryItem :displayInput=false title="Exclusions" category="exclusions" ref="itemExclusions" />
-            <QueryItem :displayInput=false title="Conditions" category="conditions" ref="itemConditions" />
         </BAccordionItem>
     </BAccordion>
 

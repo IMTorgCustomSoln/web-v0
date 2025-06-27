@@ -9,9 +9,9 @@
         </BFormGroup>
         <BFormGroup>
             <BButtonGroup size="sm">
-                {{ title }}
+                <!--{{ title }}-->
                 <BButton v-if="displayInput" variant="primary" @click="clearQuery">Clear</BButton>
-                <BButton v-if="!displayInput" variant="primary" @click="visible = !visible">Collapse</BButton>
+                <!--<BButton v-if="!displayInput" variant="primary" @click="visible = !visible">Collapse</BButton>-->
                 <BButton v-if="!displayInput" variant="primary" @click="addSelectedTextToQuery">Add Selection</BButton>
                 <BFormSpinbutton v-model="cutoff" size="sm" min="0" max="2" step="0.100" />
                 <BButton variant="primary" @click="runPreConfigQuery">Submit</BButton>
