@@ -12,7 +12,7 @@
                 </BButtonGroup>
 
                 <BButtonGroup class="mx-1" size="sm" placement="right">
-                    <BButton @click="highlightText">Hightlight Text</BButton>
+                    <BButton @click="getTextLocation">Hightlight Text</BButton>
                     <!--TODO 
                     ~~ <BButton @click="extractTextRadio">Select Text ({{ formatBoolean(this.extractText) }})</BButton> ~~
                     -->
@@ -64,13 +64,13 @@ export default {
         async currentPage(newValue) {
             await this.updatePage(newValue)
         },
-        'useUserContent.getSelectedSnippet':{
+        'useUserContent.getSelectedSnippet': {
             handler(newValue, oldValue) {
-            // Perform actions when 'anotherObject' or its nested properties change
-            console.log('hi from pdfDisplay!')
-            console.log(newValue)
-          },
-          deep: true
+                // Perform actions when 'anotherObject' or its nested properties change
+                console.log('hi from pdfDisplay!')
+                console.log(newValue)
+            },
+            deep: true
         },
     },
     computed: {
@@ -195,25 +195,58 @@ export default {
 
 
         // functionality
-        async getTextLocation() {
-            const page = parseInt(this.userContentStore['selectedSnippet'].page)
-            const searchText = this.userContentStore['selectedSnippet'].text
-            const pageProxy = await this.pdfDocProxy.getPage(page)
-            const textContent = await pageProxy.getTextContent()
 
-            // Search for the text to highlight
-            var textIndex = textContent.items.findIndex(item => item.str.includes(searchText.substr(10, 5)));
-            //if (textIndex != -1) {
-            if (true) {
-                // Get coordinates of the text
-                //let textItem = textContent.items[textIndex]
-                const viewport = pageProxy.getViewport({ scale: 1 })
-                const selectedRects = window.getSelection().getRangeAt(0).getClientRects()
+        //ref: https://github.com/mozilla/pdf.js/issues/5643    
+        //ref: https://github.com/mozilla/pdf.js/issues/12031
+        async getTextLocation() {
+            //const page = parseInt(this.userContentStore['selectedSnippet'].page)
+            //const searchText = this.userContentStore['selectedSnippet'].text
+            /*
+            TODO: steps to create for tagging similarity-results (snippets) within pdf
+            * add technique for changing to display to correct page
+            * fill intensity based on strength of score / distance (closer to zero is darker)
+            * re-write text on top of ctx.fillRect for better visibility
+            * add else so that something in the snippet will get hit
+            * improve split on text (sentencizer for vectorization) better than current split on '.'
+            * 
+            */
+            const pageProxy = await this.pdfDocProxy.getPage(this.currentPage)
+            const viewport = pageProxy.getViewport({ scale: 1 })
+
+            const textContent = await pageProxy.getTextContent()
+            // search for the text to highlight
+            let searchText = window.getSelection().toString()
+            let textIndex = textContent.items.findIndex(item => item.str.includes(searchText));
+            let selectedRects1 = null
+            let selectedRects2 = null
+            if (textIndex != -1) {
+                // 1) get coordinates of the text
+                const textItem = textContent.items[textIndex]
+                let input = [textItem.transform[4], textItem.transform[5], textItem.width, textItem.height]
+                let scale = 1
+                let canvas_height = viewport.viewBox[3]
+                let bounds = this.convertToCanvasCoords(input, scale, canvas_height)
+                let canvas = document.getElementsByTagName('canvas')[0]
+                let ctx = canvas.getContext("2d")
+                //ctx.strokeRect(bounds[0],bounds[1],bounds[2],bounds[3])
+                ctx.fillStyle = "rgba(255, 197, 0, 0.33)"
+                ctx.fillRect(bounds[0], bounds[1], bounds[2], bounds[3])
+
+                // 2) get coordinates of cursor selection
+                selectedRects2 = window.getSelection().getRangeAt(0).getClientRects()
+                console.log(selectedRects2)
+            } else {
+                //continue reducing length of selection until something is hit
             }
-            return selectedRects
+            return selectedRects1
+        },
+        //ref: https://github.com/mozilla/pdf.js/issues/5643  
+        convertToCanvasCoords([x, y, width, height], scale, canvas_height) {
+            //const { scale } = this;
+            return [x * scale, canvas_height - ((y + height) * scale), width * scale, height * scale];
         },
         // ref: https://gist.github.com/yurydelendik/f2b846dae7cb29c86d23
-        async highlightText() {
+        async highlightTextFromCursorSelection() {
             const page = parseInt(this.userContentStore['selectedSnippet'].page)
             const pageProxy = await this.pdfDocProxy.getPage(page)
 
@@ -221,12 +254,13 @@ export default {
             const viewport = pageProxy.getViewport({ scale: 1 })
             const selectedRects = window.getSelection().getRangeAt(0).getClientRects()
             const r = selectedRects[0]
+            r = selectedRects1
 
-            const rect = viewport.convertToPdfPoint(r.left, r.top).concat(
+            rect = viewport.convertToPdfPoint(r.left, r.top).concat(
                 viewport.convertToPdfPoint(r.right, r.bottom))
 
-            const bounds = viewport.convertToViewportRectangle(rect)
-            const el = document.createElement('div')
+            bounds = viewport.convertToViewportRectangle(rect)
+            el = document.createElement('div')
 
             const highlightRect = bounds
             el.style.position = 'absolute';
@@ -237,20 +271,20 @@ export default {
             el.style.backgroundColor = 'yellow';
             el.style.opacity = '0.5';
             document.body.appendChild(el);
-        }
-    },
-    generateColor() {
-        return Math.floor(Math.random() * 16777215).toString(16);
-    },
-    createRectDiv(boundBox, highlightColor) {
-        // console.log(randomColor);
-        var el = document.createElement('div');
-        el.setAttribute('class', 'hiDiv')
-        el.setAttribute('style', 'position: absolute; background-color: #' + highlightColor + '; opacity: 0.5;' +
-            'left:' + boundBox[0] + 'px; top:' + boundBox[1] + 'px;' +
-            'width:' + boundBox[2] + 'px; height:' + boundBox[3] + 'px;');
-        return el;
-    },
+        },
+        generateColor() {
+            return Math.floor(Math.random() * 16777215).toString(16);
+        },
+        createRectDiv(boundBox, highlightColor) {
+            // console.log(randomColor);
+            var el = document.createElement('div');
+            el.setAttribute('class', 'hiDiv')
+            el.setAttribute('style', 'position: absolute; background-color: #' + highlightColor + '; opacity: 0.5;' +
+                'left:' + boundBox[0] + 'px; top:' + boundBox[1] + 'px;' +
+                'width:' + boundBox[2] + 'px; height:' + boundBox[3] + 'px;');
+            return el;
+        },
+    }
 }
 
 

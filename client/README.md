@@ -39,12 +39,23 @@ _Phase I_
 * ~~create DocumentRecord in store~~
 * ~~create 3 categories of search prompts: coverage + amounts, exclusions, conditions~~
 * ~~enable user to select text~~
-* use text to modify / refine prompt
-* example input
+* ~~improved prompts and scoring~~
+* ~~use most current pdfjs-dist~~
+* ~~example input~~
 
 _Phase II_
 
-* create new component for QueryInput.vue button groups
+* ~~logic to find and hightlight text~~
+* improve highlighting display: PdfDisplay.vue, ln.201: getTextLocation()
+* add result snippets text highlighting
+* logic to add custom text to modify / refine prompt
+* improve setencizer for vectorization
+* plan to integrate `contract-data` repo
+* try graph-rag with `kuzudb`
+
+_Phase III_
+
+* ~~create new component for QueryInput.vue button groups~~
 * fix `npm run dev` so workers load
 * obfuscate code and cause failure have N+5 days
 * use s3 as a static web server
