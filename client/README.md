@@ -49,7 +49,7 @@ _Phase II_
 * improve highlighting display: PdfDisplay.vue, ln.201: getTextLocation()
 * add result snippets text highlighting
 * logic to add custom text to modify / refine prompt
-* improve setencizer for vectorization
+* ~~improve setencizer for vectorization~~
 * plan to integrate `contract-data` repo
 * try graph-rag with `kuzudb`
 

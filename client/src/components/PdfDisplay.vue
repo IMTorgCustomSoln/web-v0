@@ -254,7 +254,7 @@ export default {
             const viewport = pageProxy.getViewport({ scale: 1 })
             const selectedRects = window.getSelection().getRangeAt(0).getClientRects()
             const r = selectedRects[0]
-            r = selectedRects1
+            //r = selectedRects1
 
             rect = viewport.convertToPdfPoint(r.left, r.top).concat(
                 viewport.convertToPdfPoint(r.right, r.bottom))

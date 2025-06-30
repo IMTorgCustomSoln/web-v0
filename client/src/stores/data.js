@@ -8,6 +8,11 @@ import { updateItemsInStore, getItemFromStore } from './idb_mgmt.js'
 
 import { getVectorFromText, euclideanDistance } from '@/components/utils/vector.js'
 
+let doc = window.nlp('Are you shouting boo, or boo-urns? Booo! I was saying boo-urns.')
+let test = doc.sentences().length == 3
+console.log(`test compromisejs works: ${test}`)
+
+
 
 // Managed Notes
 
@@ -197,23 +202,31 @@ export class DocumentRecord {
   async createVetors(){
     const vectorRecords = []
     for (let [page, pageText] of Object.entries(this.body_pages) ) {
-      const sentences = pageText.split('.')
-      for (let [index, textLine] of sentences.entries()) {
-        if (textLine.length < 100 | textLine.length > 1000) {
-          continue
-        }
-        const docEmbedding = await getVectorFromText(textLine)
-        const vectorItem = {
-          'page': page,
-          'index': index,
-          'text': textLine,
-          'embedding': docEmbedding
-        }
-        console.log(vectorItem)
-        vectorRecords.push(vectorItem)
+      const sentences = await window.nlp(pageText).sentences()
+      for (let [index, sentence] of sentences.json().entries()) {
+        let textLine = sentence.text
+        let vectorItem = {}
+        if (textLine.length > 100 | textLine.length < 1000) {
+          const docEmbedding = await getVectorFromText(textLine)
+          vectorItem = {
+            'page': page,
+            'index': index,
+            'text': textLine,
+            'embedding': docEmbedding
+          }
+      } else {
+        vectorItem = {
+            'page': page,
+            'index': index,
+            'text': textLine,
+            'embedding': null
+          }
       }
+      console.log(vectorItem)
+      vectorRecords.push(vectorItem)
     }
     return vectorRecords
+    }
   }
   async setVectors(vectorRecords=null) {
     if(!vectorRecords){
