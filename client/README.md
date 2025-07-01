@@ -50,10 +50,14 @@ _Phase II_
 * add result snippets text highlighting
 * steps to create for tagging similarity-results (snippets) within pdf
   - add technique for changing to display to correct page
-  - fill intensity based on strength of score / distance (closer to zero is darker)
+  - ~~fill intensity based on strength of score / distance (closer to zero is darker)~~
+  - enable fill with dynamic cutoff
+  - enable fill with dynamic color
+  - error: vector search is only performed on page-1 textContent
+  - duplicates in category results
   - re-write text on top of ctx.fillRect for better visibility
-  - add else so that something in the snippet will get hit
-  - improve split on text (sentencizer for vectorization) better than current split on '.'
+  - ~~add else so that something in the snippet will get hit~~
+  - ~~improve split on text (sentencizer for vectorization) better than current split on '.'~~
 * logic to add custom text to modify / refine prompt
 * ~~improve setencizer for vectorization~~
 * plan to integrate `contract-data` repo

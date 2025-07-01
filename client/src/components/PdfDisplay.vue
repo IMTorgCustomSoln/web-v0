@@ -67,8 +67,15 @@ export default {
         },
         'userContent.selectedSnippet': {
             async handler(newValue, oldValue) {
-                console.log('hi from pdfDisplay!')
+                console.log('hi from selectedSnippet!')
                 await this.displayHighlightedResultsItem(newValue)
+            },
+            deep: true
+        },
+        'userContent.results': {
+            async handler(newValue, oldValue) {
+                console.log('hi from results!')
+                await this.displayAllHighlightedResults()
             },
             deep: true
         },
@@ -216,7 +223,7 @@ export default {
             if(parseInt(item.page) == this.currentPage){
                 let coords = await this.findCoordinates(item.text)
                 if (coords != null) {
-                    this.highlightTextFromCoords(coords)
+                    this.highlightTextFromCoords(coords, item.dist)
                 }
             }
         },
@@ -240,10 +247,13 @@ export default {
             coords = this.convertToCanvasCoords(input, viewport.scale, canvas_height)
             return coords
         },
-        highlightTextFromCoords(coords) {
+        highlightTextFromCoords(coords, score) {
+            const maxScore = 0.8
+            //const minOpacity = 0.3    TODO:ensure opacity stays between ~0.2-0.8
             let canvas = document.getElementsByTagName('canvas')[0]
             let ctx = canvas.getContext("2d")
-            ctx.fillStyle = "rgba(255, 197, 0, 0.33)"
+            let opacity = 1 - ( score / maxScore )
+            ctx.fillStyle = `rgba(255, 197, 0, ${opacity})`
             ctx.fillRect(coords[0], coords[1], coords[2], coords[3])
         },
         async reloadPage(){

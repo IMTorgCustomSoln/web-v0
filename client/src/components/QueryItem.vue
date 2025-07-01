@@ -101,10 +101,15 @@ export default {
             const uniqueResults = Array.from(
                 new Set(results.map(obj => JSON.stringify(obj)))
             ).map(str => JSON.parse(str))
-            this.queryInput = null
+            this.clearResults()
             console.log(uniqueResults)
             this.userContentStore.results[this.category].push(...uniqueResults)
             this.prepareAndDisplayResults(uniqueResults)
+        },
+        clearResults(){
+            this.prompts.length = 0
+            this.queryInput = null
+            this.userContentStore.results[this.category].length = 0
         },
         async query(item) {
             console.log(item)
