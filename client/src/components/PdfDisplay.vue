@@ -12,7 +12,7 @@
                 </BButtonGroup>
 
                 <BButtonGroup class="mx-1" size="sm" placement="right">
-                    <BButton @click="getTextLocation">Hightlight Text</BButton>
+                    <BButton @click="reloadPage">Clear Highlights</BButton>
                     <!--TODO 
                     ~~ <BButton @click="extractTextRadio">Select Text ({{ formatBoolean(this.extractText) }})</BButton> ~~
                     -->
@@ -54,6 +54,7 @@ export default {
             height: null,
 
             extractText: true,
+            userContent: useUserContent()
         }
     },
     async mounted() {
@@ -64,11 +65,10 @@ export default {
         async currentPage(newValue) {
             await this.updatePage(newValue)
         },
-        'useUserContent.getSelectedSnippet': {
-            handler(newValue, oldValue) {
-                // Perform actions when 'anotherObject' or its nested properties change
+        'userContent.selectedSnippet': {
+            async handler(newValue, oldValue) {
                 console.log('hi from pdfDisplay!')
-                console.log(newValue)
+                await this.displayHighlightedResultsItem(newValue)
             },
             deep: true
         },
@@ -195,24 +195,72 @@ export default {
 
 
         // functionality
-
+        async displayAllHighlightedResults() {
+            const categories = Object.keys(this.userContentStore.results)
+            for (let category in categories) {
+                this.displayHighlightedResultsForCategory(category)
+            }
+        },
+        async displayHighlightedResultsForCategory(category) {
+            for (let item in this.userContentStore.results[category]) {
+                if (parseInt(item.page) == this.currentPage) {
+                    console.log(item.text)
+                    let coords = await this.findCoordinates(item.text)
+                    if (coords != null) {
+                        this.highlightTextFromCoords(coords)
+                    }
+                }
+            }
+        },
+        async displayHighlightedResultsItem(item) {
+            if(parseInt(item.page) == this.currentPage){
+                let coords = await this.findCoordinates(item.text)
+                if (coords != null) {
+                    this.highlightTextFromCoords(coords)
+                }
+            }
+        },
+        async findCoordinates(searchText){
+            const pageProxy = await this.pdfDocProxy.getPage(this.currentPage)
+            const viewport = pageProxy.getViewport({ scale: 1 })
+            const textContent = await pageProxy.getTextContent()
+            let coords = null
+            let textIndex = -1
+            while( textIndex == -1){
+                if(searchText.length > 0){
+                    textIndex = textContent.items.findIndex(item => item.str.includes(searchText))
+                    searchText = searchText.substring(1)
+                }else{
+                    return coords
+                }
+            }
+            const textItem = textContent.items[textIndex]
+            let input = [textItem.transform[4], textItem.transform[5], textItem.width, textItem.height]
+            let canvas_height = viewport.viewBox[3]
+            coords = this.convertToCanvasCoords(input, viewport.scale, canvas_height)
+            return coords
+        },
+        highlightTextFromCoords(coords) {
+            let canvas = document.getElementsByTagName('canvas')[0]
+            let ctx = canvas.getContext("2d")
+            ctx.fillStyle = "rgba(255, 197, 0, 0.33)"
+            ctx.fillRect(coords[0], coords[1], coords[2], coords[3])
+        },
+        async reloadPage(){
+            let canvas = document.getElementsByTagName('canvas')[0]
+            let ctx = canvas.getContext("2d")
+            ctx.clearRect(0, 0, canvas.width, canvas.height)
+            await this.updatePage(this.currentPage) 
+        },
         //ref: https://github.com/mozilla/pdf.js/issues/5643    
         //ref: https://github.com/mozilla/pdf.js/issues/12031
         async getTextLocation() {
             //const page = parseInt(this.userContentStore['selectedSnippet'].page)
             //const searchText = this.userContentStore['selectedSnippet'].text
             /*
-            TODO: steps to create for tagging similarity-results (snippets) within pdf
-            * add technique for changing to display to correct page
-            * fill intensity based on strength of score / distance (closer to zero is darker)
-            * re-write text on top of ctx.fillRect for better visibility
-            * add else so that something in the snippet will get hit
-            * improve split on text (sentencizer for vectorization) better than current split on '.'
-            * 
             */
             const pageProxy = await this.pdfDocProxy.getPage(this.currentPage)
             const viewport = pageProxy.getViewport({ scale: 1 })
-
             const textContent = await pageProxy.getTextContent()
             // search for the text to highlight
             let searchText = window.getSelection().toString()
@@ -236,7 +284,7 @@ export default {
                 selectedRects2 = window.getSelection().getRangeAt(0).getClientRects()
                 console.log(selectedRects2)
             } else {
-                //continue reducing length of selection until something is hit
+                //TODO:continue reducing length of selection until something is hit
             }
             return selectedRects1
         },

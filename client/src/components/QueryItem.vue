@@ -19,7 +19,7 @@
             <BCollapse id="results" v-model="visible">
                 <BCard>
                     <ul v-for="item in results">
-                        <div @click="selectItem(item)">
+                        <div @click="selectResult(item)">
                             <li> <strong>pg.{{ item.page }} )</strong> [score: {{ item.dist }}] <br>{{ item.text }}
                             </li>
                         </div>
@@ -102,6 +102,8 @@ export default {
                 new Set(results.map(obj => JSON.stringify(obj)))
             ).map(str => JSON.parse(str))
             this.queryInput = null
+            console.log(uniqueResults)
+            this.userContentStore.results[this.category].push(...uniqueResults)
             this.prepareAndDisplayResults(uniqueResults)
         },
         async query(item) {
@@ -126,7 +128,7 @@ export default {
             let sortedDistances = sortArrayByKey(distances, 'dist', true)
             this.results.splice(0, this.results.length, ...sortedDistances)//.slice(0, 10));
         },
-        selectItem(item) {
+        selectResult(item) {
             console.log(item)
             this.userContentStore['selectedSnippet'] = item
         },

@@ -15,44 +15,21 @@ export const useUserContent = defineStore('userContent', {
               exclusions: prompts['exclusions'],
               conditions: prompts['conditions']
             },
+            results:{
+              user: [],
+              coverage: [],
+              exclusions: [],
+              conditions: []
+            },
 
             //temporary staging
             processedFiles: [],
             //documents: [],
 
             //permanent
-            selectedDocument: '1',        //TODO:make explicit that this is the doc.id and it is a string
-            selectedSnippet: {page: '1', index: 11, text: '00 If the Named Insured cancels this Policy, the m…retained premium shall be no less than 25% ITEM 4', embedding: Array(384), dist: 0.373},
-            /* //cursor selection: text: '00 If ...
-            bottom: 805.4271240234375,
-            height: 11.3333740234375,
-            left: 169.45639038085938,
-            right: 347.13299560546875,
-            top: 794.09375,
-            width: 177.67660522460938,
-            x: 169.45639038085938,
-            y: 94.09375,
+            selectedDocument: '1',         //TODO:make explicit that this is the doc.id and it is a string
+            selectedSnippet: null,         //{page: '1', index: 11, text: '00 If the Named Insured cancels this Policy, the m…retained premium shall be no less than 25% ITEM 4', embedding: Array(384), dist: 0.373},
 
-            //searchText: DECLARATIONS
-            dir: "ltr",
-            fontName: "g_d5_f2",
-            hasEOL: true,
-            height: 14,
-            str: "DECLARATIONS // COMMERCIAL EXCESS LIABILITY COVERAGE FOLLOW"
-            transform: (6) [14, 0, 0, 14, 36, 687.3770008099999]
-            width: 503.22999999999996
-
-            //cursor selection text: DECLARATIONS
-            bottom: 464.9375,
-            height: 16,
-            left: 110.57292175292969,
-            right: 224.67074584960938,
-            top: 448.9375,
-            width: 114.09782409667969,
-            x: 110.57292175292969,
-            y: 448.9375
-            */
-            
             documentsIndex: {
               documents: [],
               indices: {
@@ -85,7 +62,9 @@ export const useUserContent = defineStore('userContent', {
         }
       }*/
       getSelectedDocument: (state)=>state.selectedDocument > -1 ? state.selectedDocument : 0,
-      getSelectedSnippet: (state)=>state.selectedSnippet
+      reactToSelectedSnippet: (state)=>{
+        state.selectedSnippet
+      },
     },
     actions:{
         getName(){

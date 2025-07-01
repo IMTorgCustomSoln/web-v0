@@ -55,7 +55,8 @@ export default {
         return {
             //fileContent: null
             filenames: [],
-            importedFiles: []
+            importedFiles: [],
+            selectedSnippet: null
         }
     },
     computed: {
