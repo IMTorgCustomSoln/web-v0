@@ -110,12 +110,12 @@ export default {
                 const dist_within_cutoff = distances.filter(item => item.dist <= this.cutoff)
                 results.push(...dist_within_cutoff)
             }
-            const uniqueResults = Array.from(
-                new Set(results.map(obj => JSON.stringify(obj)))
-            ).map(str => JSON.parse(str))
+           const uniqueResults = deduplicate(results, 'text')
             this.clearResults()
             console.log(uniqueResults)
-            this.userContentStore.results[this.category].push(...uniqueResults)
+            if (this.category != 'user'){    //TODO:this was supposed to prevent from adding to results when selectedSnippet, but it should be done for all categories
+                this.userContentStore.results[this.category].push(...uniqueResults)
+            }
             this.prepareAndDisplayResults(uniqueResults)
         },
         clearResults(){
@@ -166,6 +166,10 @@ export default {
         }
     }
 }
+
+const deduplicate = (arr, key) => {
+  return Array.from(new Map(arr.map(item => [item[key], item])).values());
+};
 
 </script>
 

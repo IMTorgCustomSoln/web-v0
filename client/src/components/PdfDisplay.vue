@@ -68,7 +68,7 @@ export default {
         'userContent.selectedSnippet': {
             async handler(newSelectedSnippet, oldValue) {
                 console.log('hi from selectedSnippet!')
-                const check = await this.displayHighlightedResultsItem(newSelectedSnippet)
+                const check = await this.displayHighlightedResultSnippet(newSelectedSnippet)
                 console.log(`check displayHighlightedResultsItem: ${check}`)
             },
             deep: true
@@ -219,18 +219,18 @@ export default {
                     let coords = await this.findTextCoordinatesOnCanvas(item.text)
                     if (coords != null) {
                         const rgbColor = this.userContentStore.theme[category]
-                        this.highlightTextFromCoords(coords, item, rgbColor)
+                        this.highlightTextFromCoords(coords, item, rgbColor, 'fill')
                     }
                 }
             }
         },
-        async displayHighlightedResultsItem(item) {
+        async displayHighlightedResultSnippet(item) {
             this.currentPage = parseInt(item.page)
             if (parseInt(item.page) == this.currentPage) {
                 let coords = await this.findTextCoordinatesOnCanvas(item.text)
                 if (coords != null) {
-                    const rgbColor = {red: 255, green: 197, blue: 0}
-                    this.highlightTextFromCoords(coords, item, rgbColor)
+                    const rgbColor = [255, 146, 0]
+                    this.highlightTextFromCoords(coords, item, rgbColor, 'outline')
                     return true
                 }
             }
@@ -270,15 +270,24 @@ export default {
         },
         /* Highlight text using coordinates to place a canvas context rect
         */
-        highlightTextFromCoords(coords, item, rgbColor) {
+        highlightTextFromCoords(coords, item, rgbColor, method) {
             const max_dist_cutoff = item.cutoff ? item.cutoff : 0.8
             const opacity_lowerbound = 0.3
             const item_dist = item.dist
             let canvas = document.getElementsByTagName('canvas')[0]
             let ctx = canvas.getContext("2d")
             let opacity = this.determineFillOpacity(max_dist_cutoff, opacity_lowerbound, item_dist)
-            ctx.fillStyle = `rgba(${rgbColor[0]}, ${rgbColor[1]}, ${rgbColor[2]}, ${opacity})`
-            ctx.fillRect(coords[0], coords[1], coords[2], coords[3])
+            if (method == 'fill'){
+                ctx.fillStyle = `rgba(${rgbColor[0]}, ${rgbColor[1]}, ${rgbColor[2]}, ${opacity})`
+                ctx.fillRect(coords[0], coords[1], coords[2], coords[3])
+            } else if (method == 'outline'){
+                //ctx.shadowColor = "#d53";
+                //ctx.shadowBlur = 20;
+                ctx.lineJoin = "bevel";
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = `rgba(${rgbColor[0]}, ${rgbColor[1]}, ${rgbColor[2]})`
+                ctx.strokeRect(coords[0], coords[1], coords[2], coords[3])
+            }
         },
         /* Get location of cursor-selected text (on canvas) and highlight it
 

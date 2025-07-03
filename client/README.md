@@ -52,19 +52,19 @@ _Phase II_
   - ~~add technique for changing to display to correct page~~
   - ~~reduce number of pages vectorized for testing~~
   - ~~fill intensity based on strength of score / distance (closer to zero is darker)~~
-  - enable fill with dynamic cutoff
+  - enable fill with dynamic cutoff, or use first N items???
   - ~~enable fill with dynamic color~~
-  - duplicates in category results
+  - ~~duplicates in category results~~
   - re-write text on top of ctx.fillRect for better visibility
   - ~~add else so that something in the snippet will get hit~~
   - ~~improve split on text (sentencizer for vectorization) better than current split on '.'~~
 * still problems
-  - for selectedSnippet, mod displayHighlightedResultsItem to outline the text in opacity orange
+  - ~~for selectedSnippet, mod displayHighlightedResultsItem to outline the text in opacity orange~~
   - ~~selectSnippet: do pages other than 1 highlight?~~
-  - opacity is not right: too dark (dist=0) or too light (dist=cutoff)???
+  - fill opacity is not right: too dark (dist=0) or too light (dist=cutoff)???
   - query results are not bad, but you have to fiddle with the cutoff: just take the first N=10???
-  - display highlight gets too few of the text???
-  - need scrolling within QueryItem.vue results, ln.21
+  - `this.findTextCoordinatesOnCanvas()` coords gets too few of the text???
+  - ~~need scrolling within QueryItem.vue results, ln.21~~
 * logic to add custom text to modify / refine prompt
 * ~~improve setencizer for vectorization~~
 * plan to integrate `contract-data` repo
