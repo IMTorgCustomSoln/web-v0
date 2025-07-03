@@ -200,7 +200,7 @@ export class DocumentRecord {
     return dataArray
   }
   async createVetors(){
-    const TEST_PAGES = 4    //TODO: REMOVE EXCEPT FOR TESTING
+    const TEST_PAGES = 2    //TODO: REMOVE EXCEPT FOR TESTING
     const vectorRecords = []
     for (let [page, pageText] of Object.entries(this.body_pages) ) {
       if ( parseInt(page) <= TEST_PAGES){

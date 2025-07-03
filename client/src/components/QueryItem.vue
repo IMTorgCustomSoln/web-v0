@@ -18,12 +18,22 @@
             </BButtonGroup>
             <BCollapse id="results" v-model="visible">
                 <BCard>
-                    <ul v-for="item in results">
+                    <div class="list-container">
+                    <ul v-for="item in getResults" >
                         <div @click="selectSnippet(item)">
                             <li> <strong>pg.{{ item.page }} )</strong> [score: {{ item.dist }}] <br>{{ item.text }}
                             </li>
                         </div>
                     </ul>
+                    </div>
+                    <!--
+                        <VList :data="getResults" :style="{ height: '300px', padding: '10px' }" #default="item">
+                            <div @click="selectSnippet(item)">
+                            <li> <strong>pg.{{ item.page }} )</strong> [score: {{ item.dist }}] <br>{{ item.text }}
+                            </li>
+                        </div>
+                        </VList>
+                    -->
                 </BCard>
             </BCollapse>
         </BFormGroup>
@@ -35,11 +45,14 @@ import { toRaw } from 'vue';
 import { getVectorFromTextWithWorker } from '@/components/utils/worker-scheduler';
 import { sortArrayByKey, euclideanDistance } from './utils/vector';
 
+//import { VList } from "virtua/vue";   //TODO: not available for Vue3.5+, ref: https://github.com/inokawa/virtua/issues/642
+
 import { mapStores } from 'pinia'
 import { useUserContent } from '@/stores/UserContent'
 
 export default {
     name: 'QueryItem',
+    //components:{VList},
     props: ['displayInput', 'title', 'category'],
     data() {
         return {
@@ -53,6 +66,7 @@ export default {
     },
     computed: {
         ...mapStores(useUserContent),
+        getResults(){ return this.results }
     },
     methods: {
         /**
@@ -154,3 +168,10 @@ export default {
 }
 
 </script>
+
+<style scoped>
+.list-container {
+  max-height: 300px; /* Set your desired maximum height */
+  overflow-y: auto; /* Enable vertical scrolling only when needed */
+}
+</style>
