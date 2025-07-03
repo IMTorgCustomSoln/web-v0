@@ -19,7 +19,7 @@
             <BCollapse id="results" v-model="visible">
                 <BCard>
                     <ul v-for="item in results">
-                        <div @click="selectResult(item)">
+                        <div @click="selectSnippet(item)">
                             <li> <strong>pg.{{ item.page }} )</strong> [score: {{ item.dist }}] <br>{{ item.text }}
                             </li>
                         </div>
@@ -80,8 +80,6 @@ export default {
         * cutoff.  Ensure to remove duplicates.
         */
         async runPreConfigQuery() {
-            //async function test(){
-            const cutoff = 0.8
             this.prompts.push(this.userSubmit)
             const arr = JSON.parse(JSON.stringify(this.prompts))
             const providedPrompts = this.userContentStore['prompts'][this.category]
@@ -119,7 +117,7 @@ export default {
                 const vectorObj = await docRec.getVector()
                 console.log(vectorObj)
                 for (let item of vectorObj.record.vectorRecords) {
-                    console.log(item.embedding)
+                    //console.log(item.embedding)
                     let dist = euclideanDistance(searchEmbedding, item.embedding)
                     if (dist != undefined) {
                         item.dist = parseFloat(dist.toFixed(3))
@@ -133,9 +131,11 @@ export default {
             let sortedDistances = sortArrayByKey(distances, 'dist', true)
             this.results.splice(0, this.results.length, ...sortedDistances)//.slice(0, 10));
         },
-        selectResult(item) {
+        selectSnippet(item) {
+            item['cutoff'] = this.cutoff
             console.log(item)
             this.userContentStore['selectedSnippet'] = item
+            //this.userContentStore['results'][this.category].push(item)
         },
         clearQuery() {
             this.results.length = 0

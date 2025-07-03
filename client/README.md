@@ -46,18 +46,25 @@ _Phase I_
 _Phase II_
 
 * ~~logic to find and hightlight text~~
-* improve highlighting display: PdfDisplay.vue, ln.201: getTextLocation()
-* add result snippets text highlighting
+* ~~improve highlighting display: PdfDisplay.vue, ln.201: getTextLocation()~~
+* ~~add result snippets text highlighting~~
 * steps to create for tagging similarity-results (snippets) within pdf
-  - add technique for changing to display to correct page
+  - ~~add technique for changing to display to correct page~~
+  - ~~reduce number of pages vectorized for testing~~
   - ~~fill intensity based on strength of score / distance (closer to zero is darker)~~
   - enable fill with dynamic cutoff
-  - enable fill with dynamic color
-  - error: vector search is only performed on page-1 textContent
+  - ~~enable fill with dynamic color~~
   - duplicates in category results
   - re-write text on top of ctx.fillRect for better visibility
   - ~~add else so that something in the snippet will get hit~~
   - ~~improve split on text (sentencizer for vectorization) better than current split on '.'~~
+* still problems
+  - for selectedSnippet, mod displayHighlightedResultsItem to outline the text in opacity orange
+  - ~~selectSnippet: do pages other than 1 highlight?~~
+  - opacity is not right: too dark (dist=0) or too light (dist=cutoff)???
+  - query results are not bad, but you have to fiddle with the cutoff: just take the first N=10???
+  - display highlight gets too few of the text???
+  - need scrolling within QueryItem.vue results, ln.21
 * logic to add custom text to modify / refine prompt
 * ~~improve setencizer for vectorization~~
 * plan to integrate `contract-data` repo

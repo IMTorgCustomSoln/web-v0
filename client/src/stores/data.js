@@ -200,13 +200,15 @@ export class DocumentRecord {
     return dataArray
   }
   async createVetors(){
+    const TEST_PAGES = 4    //TODO: REMOVE EXCEPT FOR TESTING
     const vectorRecords = []
     for (let [page, pageText] of Object.entries(this.body_pages) ) {
+      if ( parseInt(page) <= TEST_PAGES){
       const sentences = await window.nlp(pageText).sentences()
       for (let [index, sentence] of sentences.json().entries()) {
         let textLine = sentence.text
         let vectorItem = {}
-        if (textLine.length > 100 | textLine.length < 1000) {
+        if (textLine.length > 100 | textLine.length < 1000) {     //TODO: chunking should be implemented here: i) maximize the token input with out making it fragile (~1200), ii) create overlaps in tokens (~100 tokens)
           const docEmbedding = await getVectorFromText(textLine)
           vectorItem = {
             'page': page,
@@ -225,8 +227,9 @@ export class DocumentRecord {
       console.log(vectorItem)
       vectorRecords.push(vectorItem)
     }
-    return vectorRecords
     }
+  }
+    return vectorRecords
   }
   async setVectors(vectorRecords=null) {
     if(!vectorRecords){

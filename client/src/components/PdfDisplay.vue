@@ -66,16 +66,17 @@ export default {
             await this.updatePage(newValue)
         },
         'userContent.selectedSnippet': {
-            async handler(newValue, oldValue) {
+            async handler(newSelectedSnippet, oldValue) {
                 console.log('hi from selectedSnippet!')
-                await this.displayHighlightedResultsItem(newValue)
+                const check = await this.displayHighlightedResultsItem(newSelectedSnippet)
+                console.log(`check displayHighlightedResultsItem: ${check}`)
             },
             deep: true
         },
         'userContent.results': {
-            async handler(newValue, oldValue) {
+            async handler(newResults, oldValue) {
                 console.log('hi from results!')
-                await this.displayAllHighlightedResults()
+                await this.displayAllHighlightedResults(newResults)
             },
             deep: true
         },
@@ -119,7 +120,10 @@ export default {
             this.renderText(pageProxy, textLayer, viewport);
             this.renderAnnotations(pageProxy, annotationLayer, viewport);
             this.renderCanvas(pageProxy, canvasLayer, viewport);
+            await this.displayAllHighlightedResults()
+            return true
         },
+
 
         // layers
         async renderText(pdfPageProxy, textLayerContainer, viewport) {
@@ -204,40 +208,57 @@ export default {
         // functionality
         async displayAllHighlightedResults() {
             const categories = Object.keys(this.userContentStore.results)
-            for (let category in categories) {
+            for (let category of categories) {
                 this.displayHighlightedResultsForCategory(category)
             }
         },
         async displayHighlightedResultsForCategory(category) {
-            for (let item in this.userContentStore.results[category]) {
+            for (let item of this.userContentStore.results[category]) {
                 if (parseInt(item.page) == this.currentPage) {
-                    console.log(item.text)
-                    let coords = await this.findCoordinates(item.text)
+                    //console.log(item.text)
+                    let coords = await this.findTextCoordinatesOnCanvas(item.text)
                     if (coords != null) {
-                        this.highlightTextFromCoords(coords)
+                        const rgbColor = this.userContentStore.theme[category]
+                        this.highlightTextFromCoords(coords, item, rgbColor)
                     }
                 }
             }
         },
         async displayHighlightedResultsItem(item) {
-            if(parseInt(item.page) == this.currentPage){
-                let coords = await this.findCoordinates(item.text)
+            this.currentPage = parseInt(item.page)
+            if (parseInt(item.page) == this.currentPage) {
+                let coords = await this.findTextCoordinatesOnCanvas(item.text)
                 if (coords != null) {
-                    this.highlightTextFromCoords(coords, item.dist)
+                    const rgbColor = {red: 255, green: 197, blue: 0}
+                    this.highlightTextFromCoords(coords, item, rgbColor)
+                    return true
                 }
             }
+            return false
         },
-        async findCoordinates(searchText){
+        async reloadPage() {
+            let canvas = document.getElementsByTagName('canvas')[0]
+            let ctx = canvas.getContext("2d")
+            ctx.clearRect(0, 0, canvas.width, canvas.height)
+            await this.updatePage(this.currentPage)
+        },
+
+
+        // logic
+
+        /* Find the coordinates of text if it is rendered on the canvas
+        */
+        async findTextCoordinatesOnCanvas(searchText) {
             const pageProxy = await this.pdfDocProxy.getPage(this.currentPage)
             const viewport = pageProxy.getViewport({ scale: 1 })
             const textContent = await pageProxy.getTextContent()
             let coords = null
             let textIndex = -1
-            while( textIndex == -1){
-                if(searchText.length > 0){
+            while (textIndex == -1) {
+                if (searchText.length > 0) {
                     textIndex = textContent.items.findIndex(item => item.str.includes(searchText))
                     searchText = searchText.substring(1)
-                }else{
+                } else {
                     return coords
                 }
             }
@@ -247,28 +268,24 @@ export default {
             coords = this.convertToCanvasCoords(input, viewport.scale, canvas_height)
             return coords
         },
-        highlightTextFromCoords(coords, score) {
-            const maxScore = 0.8
-            //const minOpacity = 0.3    TODO:ensure opacity stays between ~0.2-0.8
+        /* Highlight text using coordinates to place a canvas context rect
+        */
+        highlightTextFromCoords(coords, item, rgbColor) {
+            const max_dist_cutoff = item.cutoff ? item.cutoff : 0.8
+            const opacity_lowerbound = 0.3
+            const item_dist = item.dist
             let canvas = document.getElementsByTagName('canvas')[0]
             let ctx = canvas.getContext("2d")
-            let opacity = 1 - ( score / maxScore )
-            ctx.fillStyle = `rgba(255, 197, 0, ${opacity})`
+            let opacity = this.determineFillOpacity(max_dist_cutoff, opacity_lowerbound, item_dist)
+            ctx.fillStyle = `rgba(${rgbColor[0]}, ${rgbColor[1]}, ${rgbColor[2]}, ${opacity})`
             ctx.fillRect(coords[0], coords[1], coords[2], coords[3])
         },
-        async reloadPage(){
-            let canvas = document.getElementsByTagName('canvas')[0]
-            let ctx = canvas.getContext("2d")
-            ctx.clearRect(0, 0, canvas.width, canvas.height)
-            await this.updatePage(this.currentPage) 
-        },
-        //ref: https://github.com/mozilla/pdf.js/issues/5643    
-        //ref: https://github.com/mozilla/pdf.js/issues/12031
+        /* Get location of cursor-selected text (on canvas) and highlight it
+
+        ref: https://github.com/mozilla/pdf.js/issues/5643    
+        ref: https://github.com/mozilla/pdf.js/issues/12031
+        */
         async getTextLocation() {
-            //const page = parseInt(this.userContentStore['selectedSnippet'].page)
-            //const searchText = this.userContentStore['selectedSnippet'].text
-            /*
-            */
             const pageProxy = await this.pdfDocProxy.getPage(this.currentPage)
             const viewport = pageProxy.getViewport({ scale: 1 })
             const textContent = await pageProxy.getTextContent()
@@ -298,12 +315,62 @@ export default {
             }
             return selectedRects1
         },
-        //ref: https://github.com/mozilla/pdf.js/issues/5643  
+        /* Convert bounds to canvas coordinates
+
+        This was very difficult to find references for and does not appear to be an 
+        approved process maintained by the owner (mozilla).  This should be explored
+        in greater detail when time permits.
+
+        ref: https://github.com/mozilla/pdf.js/issues/5643  
+        */
         convertToCanvasCoords([x, y, width, height], scale, canvas_height) {
             //const { scale } = this;
             return [x * scale, canvas_height - ((y + height) * scale), width * scale, height * scale];
         },
-        // ref: https://gist.github.com/yurydelendik/f2b846dae7cb29c86d23
+        /* Create a Rect Div for highlighting text
+        */
+        createRectDivForTextHighlight(boundBox, highlightColor) {
+            // console.log(randomColor);
+            var el = document.createElement('div');
+            el.setAttribute('class', 'hiDiv')
+            el.setAttribute('style', 'position: absolute; background-color: #' + highlightColor + '; opacity: 0.5;' +
+                'left:' + boundBox[0] + 'px; top:' + boundBox[1] + 'px;' +
+                'width:' + boundBox[2] + 'px; height:' + boundBox[3] + 'px;');
+            return el;
+        },
+        /* Determine teh opacity given teh distance cutoff and the lowerbound on opacity range.
+
+        This piecewise function is determined by solving the simultaneous equations of a line
+        (y=mx+b) for the two required points (0,1) and (cutoff, lowerbound):
+            1 = m * 0 + b
+            -lwrbnd = m * cutoff + b
+        */
+        determineFillOpacity(max_dist_cutoff, opacity_lowerbound, item_dist) {
+            let opacity = null
+            opacity = 1 - (item_dist / max_dist_cutoff)
+            /*
+            TODO: this fails to properly place line to meet requirement: opacity_lowerbound intersects item_dist
+            if (max_dist_cutoff > 1) {
+                opacity = 1 - (((max_dist_cutoff - 1) * item_dist) / opacity_lowerbound)
+            } else if (max_dist_cutoff < 1) {
+                opacity = 1 + (((max_dist_cutoff - 1) * item_dist) / opacity_lowerbound)
+            } else if (max_dist_cutoff == 1) {
+                alert(`The solution logic is changing max_dist_cutoff from ${max_dist_cutoff} to 0.99 to ensure consistency.`)
+                max_dist_cutoff = 0.99
+                opacity = 1 + (((max_dist_cutoff - 1) * item_dist) / opacity_lowerbound)
+            } else {
+                console.log(`ERROR: There was an error in your determineFillOpacity() arguments:
+            max_dist_cutoff ${max_dist_cutoff}, opacity_lowerbound ${opacity_lowerbound}, item_dis ${item_dis}
+            `)
+            }*/
+            return opacity
+        },
+        /* A different approach to highlighting text using cursor selection
+        
+        This should be compared against other approaches to determine efficacy.
+        
+        ref: https://gist.github.com/yurydelendik/f2b846dae7cb29c86d23
+        */
         async highlightTextFromCursorSelection() {
             const page = parseInt(this.userContentStore['selectedSnippet'].page)
             const pageProxy = await this.pdfDocProxy.getPage(page)
@@ -330,18 +397,12 @@ export default {
             el.style.opacity = '0.5';
             document.body.appendChild(el);
         },
+        /* Generate a random color
+        */
         generateColor() {
             return Math.floor(Math.random() * 16777215).toString(16);
         },
-        createRectDiv(boundBox, highlightColor) {
-            // console.log(randomColor);
-            var el = document.createElement('div');
-            el.setAttribute('class', 'hiDiv')
-            el.setAttribute('style', 'position: absolute; background-color: #' + highlightColor + '; opacity: 0.5;' +
-                'left:' + boundBox[0] + 'px; top:' + boundBox[1] + 'px;' +
-                'width:' + boundBox[2] + 'px; height:' + boundBox[3] + 'px;');
-            return el;
-        },
+
     }
 }
 

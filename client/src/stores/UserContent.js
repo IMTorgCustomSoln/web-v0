@@ -21,6 +21,12 @@ export const useUserContent = defineStore('userContent', {
               exclusions: [],
               conditions: []
             },
+            theme:{
+              user: [255, 197, 0],  //rgb(255, 197, 0)
+              coverage: [69, 183, 2],   //rgb(69, 183, 2)
+              exclusions: [3, 162, 171], //rgb(3, 162, 171)
+              conditions: [114, 136, 246], //rgb(114, 136, 246)
+            },
 
             //temporary staging
             processedFiles: [],
