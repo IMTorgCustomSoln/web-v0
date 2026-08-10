@@ -2,7 +2,7 @@
 
 Local, in-browser tool for reviewing contracts.
 
-![screenshot](./docs/Screenshot.png "Screenshot")
+![screenshot](./client/docs/Screenshot.png "Screenshot")
 
 ## Project Setup
 
