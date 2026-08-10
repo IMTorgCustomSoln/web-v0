@@ -1,18 +1,13 @@
 # contract-web
 
-This template should help get you started developing with Vue 3 in Vite.
+Local, in-browser tool for reviewing contracts.
 
-## Recommended IDE Setup
-
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
+![screenshot](./docs/Screenshot.png "Screenshot")
 
 ## Project Setup
 
 ```sh
+cd client
 npm install
 ```
 
@@ -26,9 +21,15 @@ npm run dev
 
 ### Compile and Minify for Production
 
+Ensure the following:
+
+* remove page restriction (for testing): `data.js, const TEST_PAGES`
+* private contract data at `../contract-data-private/documents/*`
+
+
 ```sh
 npm run build
-simplehttpserver ./dist/
+python -m http.server 8000 -d ./dist/
 ```
 
 
@@ -49,22 +50,16 @@ _Phase II_
 * ~~improve highlighting display: PdfDisplay.vue, ln.201: getTextLocation()~~
 * ~~add result snippets text highlighting~~
 * steps to create for tagging similarity-results (snippets) within pdf
-  - ~~add technique for changing to display to correct page~~
-  - ~~reduce number of pages vectorized for testing~~
-  - ~~fill intensity based on strength of score / distance (closer to zero is darker)~~
   - enable fill with dynamic cutoff, or use first N items???
-  - ~~enable fill with dynamic color~~
-  - ~~duplicates in category results~~
   - re-write text on top of ctx.fillRect for better visibility
-  - ~~add else so that something in the snippet will get hit~~
-  - ~~improve split on text (sentencizer for vectorization) better than current split on '.'~~
-* still problems
-  - ~~for selectedSnippet, mod displayHighlightedResultsItem to outline the text in opacity orange~~
-  - ~~selectSnippet: do pages other than 1 highlight?~~
+  - create unique_id on each ctx addition, then add `x` to right-side of each result snippet to remove it
   - fill opacity is not right: too dark (dist=0) or too light (dist=cutoff)???
   - query results are not bad, but you have to fiddle with the cutoff: just take the first N=10???
   - `this.findTextCoordinatesOnCanvas()` coords gets too few of the text???
-  - ~~need scrolling within QueryItem.vue results, ln.21~~
+* make more room to enlargen pdfDisplay
+  - change upload file to modal, button in navbar
+  - stretch pdfDisplay floor-to-ceiling
+* chunking `data.js, ln.211`
 * logic to add custom text to modify / refine prompt
 * ~~improve setencizer for vectorization~~
 * plan to integrate `contract-data` repo
